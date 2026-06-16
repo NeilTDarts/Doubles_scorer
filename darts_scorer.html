@@ -1,0 +1,1663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Darts Scorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0D0D0D;
+    --surface: #161616;
+    --surface2: #1e1e1e;
+    --border: #2a2a2a;
+    --crimson: #8B0000;
+    --crimson-bright: #c0392b;
+    --gold: #D4A017;
+    --gold-light: #f0c040;
+    --steel: #B0B8C1;
+    --steel-dim: #666e77;
+    --white: #f0f0f0;
+    --text: #e8e8e8;
+    --text-dim: #888;
+    --success: #27ae60;
+    --warning: #e67e22;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; }
+
+  /* HEADER */
+  header {
+    background:linear-gradient(135deg,#0a0a0a 0%,#1a0000 50%,#0a0a0a 100%);
+    border-bottom:2px solid var(--crimson);
+    padding:14px 24px;
+    display:flex; align-items:center; gap:16px;
+    position:relative; overflow:hidden;
+  }
+  header::before {
+    content:''; position:absolute; top:-60px; right:-60px;
+    width:200px; height:200px;
+    background:radial-gradient(circle,rgba(139,0,0,0.15) 0%,transparent 70%);
+    pointer-events:none;
+  }
+  .bullseye { width:48px; height:48px; flex-shrink:0; }
+  .bullseye svg { width:100%; height:100%; }
+  header h1 { font-family:'Bebas Neue',sans-serif; font-size:2rem; letter-spacing:3px; color:var(--white); text-shadow:0 0 20px rgba(212,160,23,0.4); }
+  header h1 span { color:var(--gold); }
+  .header-right { margin-left:auto; text-align:right; }
+  .match-scoreline { font-family:'Bebas Neue',sans-serif; font-size:2.2rem; color:var(--gold); line-height:1; }
+  .match-scoreline small { font-size:0.65rem; color:var(--steel-dim); display:block; letter-spacing:1px; font-family:'Inter',sans-serif; }
+
+  /* TABS */
+  .tabs { display:flex; background:var(--surface); border-bottom:1px solid var(--border); padding:0 16px; gap:2px; overflow-x:auto; }
+  .tab-btn { background:none; border:none; color:var(--steel-dim); font-family:'Bebas Neue',sans-serif; font-size:1rem; letter-spacing:1.5px; padding:13px 20px; cursor:pointer; border-bottom:3px solid transparent; transition:all 0.2s; white-space:nowrap; }
+  .tab-btn:hover { color:var(--steel); }
+  .tab-btn.active { color:var(--gold); border-bottom-color:var(--gold); }
+
+  /* PANELS */
+  .panel { display:none; padding:16px 20px; max-width:1400px; margin:0 auto; }
+  .panel.active { display:block; }
+
+  /* SETUP BAR */
+  .setup-bar { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:14px 18px; margin-bottom:14px; display:flex; align-items:flex-end; gap:16px; flex-wrap:wrap; }
+  .setup-bar label { font-size:0.7rem; color:var(--steel-dim); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:4px; }
+  .setup-bar input, .setup-bar select { background:var(--bg); border:1px solid var(--border); color:var(--text); padding:7px 10px; border-radius:4px; font-family:'Inter',sans-serif; font-size:0.875rem; }
+  .setup-bar input:focus, .setup-bar select:focus { outline:none; border-color:var(--gold); }
+  .match-vs-badge { font-family:'Bebas Neue',sans-serif; font-size:1.4rem; color:var(--crimson-bright); padding-bottom:4px; }
+
+  /* PLAYER SETUP */
+  .player-setup-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
+  .player-setup-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:14px 16px; }
+  .player-setup-title { font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; font-weight:600; margin-bottom:10px; }
+  .player-setup-title.home { color:var(--crimson-bright); }
+  .player-setup-title.away { color:var(--steel-dim); }
+  .player-inputs { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .player-inputs label { font-size:0.62rem; color:var(--steel-dim); display:block; margin-bottom:3px; }
+  .player-inputs input { width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); padding:5px 8px; border-radius:4px; font-family:'Inter',sans-serif; font-size:0.82rem; }
+  .player-inputs input:focus { outline:none; border-color:var(--gold); }
+
+  /* GAME NAV */
+  .game-nav { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+  .game-nav-btn { background:var(--surface2); border:1px solid var(--border); color:var(--text-dim); padding:7px 18px; border-radius:4px; cursor:pointer; font-family:'Bebas Neue',sans-serif; font-size:0.95rem; letter-spacing:1px; transition:all 0.2s; }
+  .game-nav-btn:hover { border-color:var(--gold); color:var(--gold); }
+  .game-nav-btn.active { background:var(--crimson); border-color:var(--crimson); color:white; }
+  .game-nav-btn.won-home { border-color:var(--success); color:var(--success); }
+  .game-nav-btn.won-away { border-color:var(--crimson-bright); color:var(--crimson-bright); }
+
+  /* TEAM SCOREBOARD */
+  .team-scoreboard { background:var(--surface); border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:14px; }
+  .scoreboard-header { background:linear-gradient(90deg,#1a0000,#0d0d0d,#1a0000); padding:12px 20px; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; border-bottom:1px solid var(--crimson); }
+  .team-label { font-family:'Bebas Neue',sans-serif; font-size:1.2rem; letter-spacing:2px; }
+  .team-label.home { color:var(--white); }
+  .team-label.away { color:var(--white); text-align:right; }
+  .score-vs-block { text-align:center; min-width:120px; }
+  .remaining-display { font-family:'Bebas Neue',sans-serif; font-size:3rem; line-height:1; }
+  .remaining-display.home-rem { color:var(--gold); }
+  .remaining-display.away-rem { color:var(--steel); }
+  .rem-label { font-size:0.62rem; color:var(--steel-dim); text-transform:uppercase; letter-spacing:1px; margin-top:2px; font-family:'Inter',sans-serif; }
+
+  /* LEG ENTRY TABLE */
+  .leg-table-wrap { padding:16px 20px; }
+  .leg-section-title { font-family:'Bebas Neue',sans-serif; font-size:0.8rem; letter-spacing:2px; color:var(--steel-dim); margin-bottom:8px; }
+  .leg-table { width:100%; border-collapse:collapse; font-size:0.82rem; }
+  .leg-table th { background:var(--surface2); color:var(--steel-dim); font-size:0.68rem; text-transform:uppercase; letter-spacing:1px; padding:7px 8px; text-align:center; border-bottom:1px solid var(--border); font-weight:600; }
+  .leg-table th.player-header { color:var(--gold); }
+  .leg-table th.away-header { color:var(--steel); }
+  .leg-table td { padding:5px 6px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.03); vertical-align:middle; }
+  .leg-table td.leg-num { color:var(--steel-dim); font-size:0.72rem; font-weight:600; }
+  .leg-table td.leg-total { font-family:'Bebas Neue',sans-serif; font-size:1rem; color:var(--gold); }
+  .leg-table td.leg-total.away-total { color:var(--steel); }
+  .leg-table td.leg-remaining { font-family:'Bebas Neue',sans-serif; font-size:1.1rem; color:var(--text-dim); }
+  .leg-table td.leg-remaining.danger { color:var(--crimson-bright); }
+  .leg-table td.leg-remaining.won { color:var(--success); font-size:0.8rem; }
+  .leg-table tr.active-leg td { background:rgba(212,160,23,0.04); }
+  .leg-table tr.completed-leg td { opacity:0.6; }
+  .leg-table tr.game-won td { background:rgba(39,174,96,0.08); }
+
+  /* SCORE INPUT */
+  .score-cell-input { background:var(--bg); border:1px solid var(--border); color:var(--gold); font-family:'Bebas Neue',sans-serif; font-size:1.1rem; width:52px; padding:4px 5px; border-radius:3px; text-align:center; }
+  .score-cell-input:focus { outline:none; border-color:var(--gold); background:#100800; }
+  .score-cell-input.away { color:var(--steel); }
+  .score-cell-input.away:focus { border-color:var(--steel); background:#080c10; }
+  .entered-score { font-family:'Bebas Neue',sans-serif; font-size:1.05rem; }
+  .entered-score.home-s { color:var(--gold); }
+  .entered-score.away-s { color:var(--steel); }
+  .entered-score.hi { color:var(--crimson-bright); font-weight:700; }
+  .entered-score.checkout { color:var(--success); font-weight:700; text-shadow:0 0 8px rgba(39,174,96,0.6); }
+
+  /* LEG AVERAGES ROW */
+  .leg-table tr.avg-row td { background:var(--surface2); font-size:0.72rem; color:var(--steel-dim); padding:6px 6px; border-top:1px solid var(--border); }
+  .leg-table tr.avg-row td.avg-val { font-family:'Bebas Neue',sans-serif; font-size:0.95rem; color:var(--gold); }
+  .leg-table tr.avg-row td.avg-val.away-avg { color:var(--steel); }
+
+  /* GAME RESULT BANNER */
+  .game-result-banner { margin:10px 20px; padding:10px 16px; border-radius:6px; font-family:'Bebas Neue',sans-serif; font-size:1.1rem; letter-spacing:1px; display:none; }
+  .game-result-banner.home-win { background:rgba(39,174,96,0.12); border:1px solid var(--success); color:var(--success); }
+  .game-result-banner.away-win { background:rgba(139,0,0,0.12); border:1px solid var(--crimson-bright); color:var(--crimson-bright); }
+
+  /* SINGLES */
+  .singles-nav { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+  .singles-nav-btn { background:var(--surface2); border:1px solid var(--border); color:var(--text-dim); padding:6px 16px; border-radius:4px; cursor:pointer; font-family:'Bebas Neue',sans-serif; font-size:0.9rem; letter-spacing:1px; transition:all 0.2s; }
+  .singles-nav-btn.active { background:var(--crimson); border-color:var(--crimson); color:white; }
+  .singles-nav-btn.won-p1 { border-color:var(--success); color:var(--success); }
+  .singles-nav-btn.won-p2 { border-color:var(--crimson-bright); color:var(--crimson-bright); }
+
+  .singles-setup { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:14px 18px; margin-bottom:14px; display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap; }
+  .singles-setup label { font-size:0.7rem; color:var(--steel-dim); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:4px; }
+  .singles-setup input { background:var(--bg); border:1px solid var(--border); color:var(--text); padding:7px 10px; border-radius:4px; font-family:'Inter',sans-serif; font-size:0.875rem; width:130px; }
+  .singles-setup input:focus { outline:none; border-color:var(--gold); }
+
+  .singles-board { max-width:680px; }
+  .singles-header { background:linear-gradient(135deg,#1a0000,#0d0d0d); border:1px solid var(--crimson); border-radius:8px; padding:14px 20px; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; margin-bottom:12px; }
+  .singles-player-name { font-family:'Bebas Neue',sans-serif; font-size:1.1rem; letter-spacing:1px; margin-bottom:4px; }
+  .singles-remaining { font-family:'Bebas Neue',sans-serif; font-size:3rem; color:var(--gold); line-height:1; text-shadow:0 0 30px rgba(212,160,23,0.4); }
+  .singles-remaining.danger { color:var(--crimson-bright); text-shadow:0 0 20px rgba(192,57,43,0.5); }
+  .singles-remaining.won { color:var(--success); }
+  .singles-right { text-align:right; }
+  .singles-remaining.away { color:var(--steel); text-shadow:0 0 20px rgba(176,184,193,0.3); }
+  .singles-vs { font-family:'Bebas Neue',sans-serif; font-size:1.1rem; color:var(--steel-dim); text-align:center; }
+
+  .singles-leg-table { background:var(--surface); border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:12px; }
+  .singles-leg-table table { width:100%; border-collapse:collapse; font-size:0.83rem; }
+  .singles-leg-table th { background:var(--surface2); color:var(--steel-dim); font-size:0.68rem; text-transform:uppercase; letter-spacing:1px; padding:7px 10px; text-align:center; border-bottom:1px solid var(--border); font-weight:600; }
+  .singles-leg-table td { padding:5px 10px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.03); }
+  .singles-leg-table tr:last-child td { border-bottom:none; }
+  .singles-leg-table tr.active-row td { background:rgba(212,160,23,0.04); }
+
+  .singles-stats { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+  .s-stat { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:10px 14px; flex:1; min-width:90px; text-align:center; }
+  .s-stat-label { font-size:0.65rem; color:var(--steel-dim); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
+  .s-stat-val { font-family:'Bebas Neue',sans-serif; font-size:1.4rem; color:var(--gold); }
+  .s-stat-val.away { color:var(--steel); }
+
+  /* SUMMARY */
+  .summary-scoreline { display:flex; align-items:center; justify-content:center; gap:20px; margin-bottom:20px; background:linear-gradient(135deg,#1a0000,#0d0d0d,#001a00); border:1px solid var(--crimson); border-radius:12px; padding:24px; }
+  .summary-team { text-align:center; }
+  .summary-team-name { font-family:'Bebas Neue',sans-serif; font-size:1.2rem; letter-spacing:2px; color:var(--steel-dim); margin-bottom:6px; }
+  .summary-team-score { font-family:'Bebas Neue',sans-serif; font-size:5rem; line-height:1; color:var(--gold); text-shadow:0 0 40px rgba(212,160,23,0.4); }
+  .summary-dash { font-family:'Bebas Neue',sans-serif; font-size:3rem; color:var(--border); }
+  .summary-breakdown { font-size:0.72rem; color:var(--steel-dim); margin-top:6px; }
+  .summary-breakdown span { color:var(--gold); }
+
+  .sum-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
+  .sum-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+  .sum-card-title { background:linear-gradient(90deg,#1a0000,var(--surface2)); padding:9px 16px; font-family:'Bebas Neue',sans-serif; font-size:0.95rem; letter-spacing:2px; color:var(--crimson-bright); border-bottom:1px solid var(--border); }
+  .sum-table { width:100%; border-collapse:collapse; font-size:0.8rem; }
+  .sum-table th { color:var(--steel-dim); font-size:0.65rem; text-transform:uppercase; letter-spacing:1px; padding:7px 10px; text-align:center; border-bottom:1px solid var(--border); font-weight:600; }
+  .sum-table th:first-child { text-align:left; }
+  .sum-table td { padding:6px 10px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.03); color:var(--text-dim); }
+  .sum-table td:first-child { text-align:left; color:var(--text); font-weight:600; }
+  .sum-table tr:last-child td { border-bottom:none; }
+  .val-gold { font-family:'Bebas Neue',sans-serif; font-size:1.05rem; color:var(--gold); }
+  .val-steel { font-family:'Bebas Neue',sans-serif; font-size:1.05rem; color:var(--steel); }
+  .badge { display:inline-block; background:var(--crimson); color:white; font-size:0.6rem; font-weight:700; padding:2px 5px; border-radius:3px; text-transform:uppercase; letter-spacing:0.5px; }
+  .badge.gold { background:var(--gold); color:#000; }
+  .badge.green { background:var(--success); color:#fff; }
+
+  /* BTNS */
+  .btn-primary { background:var(--crimson); border:none; color:white; padding:9px 22px; border-radius:4px; cursor:pointer; font-family:'Bebas Neue',sans-serif; font-size:0.95rem; letter-spacing:1.5px; transition:all 0.2s; }
+  .btn-primary:hover { background:var(--crimson-bright); }
+  .btn-secondary { background:var(--surface2); border:1px solid var(--border); color:var(--text-dim); padding:9px 22px; border-radius:4px; cursor:pointer; font-family:'Bebas Neue',sans-serif; font-size:0.95rem; letter-spacing:1.5px; transition:all 0.2s; }
+  .btn-secondary:hover { border-color:var(--gold); color:var(--gold); }
+
+  /* TOAST */
+  #toast { position:fixed; bottom:24px; right:24px; background:var(--surface); border:1px solid var(--gold); border-radius:8px; padding:12px 20px; font-family:'Bebas Neue',sans-serif; font-size:1.1rem; letter-spacing:1px; color:var(--gold); z-index:999; transform:translateY(80px); opacity:0; transition:all 0.3s; pointer-events:none; box-shadow:0 4px 20px rgba(0,0,0,0.5); }
+  #toast.show { transform:translateY(0); opacity:1; }
+
+  @media(max-width:900px) {
+    .sum-grid { grid-template-columns:1fr; }
+    .player-setup-grid { grid-template-columns:1fr; }
+    .leg-table th, .leg-table td { padding:4px 3px; font-size:0.75rem; }
+    .score-cell-input { width:44px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bullseye">
+    <svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="26" cy="26" r="25" fill="#1a0000" stroke="#8B0000" stroke-width="1"/>
+      <circle cx="26" cy="26" r="21" fill="none" stroke="#3a0000" stroke-width="2"/>
+      <circle cx="26" cy="26" r="16" fill="none" stroke="#8B0000" stroke-width="2.5"/>
+      <circle cx="26" cy="26" r="11" fill="none" stroke="#c0392b" stroke-width="2"/>
+      <circle cx="26" cy="26" r="6.5" fill="#8B0000"/>
+      <circle cx="26" cy="26" r="3" fill="#D4A017"/>
+    </svg>
+  </div>
+  <div>
+    <h1>DARTS <span>SCORER</span></h1>
+  </div>
+  <div class="header-right">
+    <div class="match-scoreline">
+      <span id="hdr-home-score">0</span> — <span id="hdr-away-score">0</span>
+      <small id="hdr-teams">HOME vs AWAY &nbsp;|&nbsp; <span id="hdr-date"></span></small>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab-btn active" onclick="switchTab('team',this)">⚡ TEAM GAMES</button>
+  <button class="tab-btn" onclick="switchTab('singles',this)">🎯 SINGLES</button>
+  <button class="tab-btn" onclick="switchTab('summary',this)">📊 SUMMARY</button>
+  <button class="tab-btn" onclick="switchTab('season',this)">🏆 SEASON</button>
+</nav>
+
+<!-- ===== TEAM GAMES ===== -->
+<div id="tab-team" class="panel active">
+
+  <div class="setup-bar">
+    <div><label>Home Team</label><input type="text" id="homeTeam" value="O'Leary's" oninput="onSetupChange()"></div>
+    <div class="match-vs-badge">VS</div>
+    <div><label>Away Team</label><input type="text" id="awayTeam" value="Vicky Dock" oninput="onSetupChange()"></div>
+    <div><label>Venue</label><input type="text" id="venue" value="O'Leary's" style="width:120px;"></div>
+    <div><label>Date</label><input type="date" id="matchDate" oninput="onDateChange()" style="width:140px;"></div>
+    <div><label>🎯 Throws First</label>
+      <select id="teamFirstSide" onchange="onTeamFirstChange()" style="background:var(--bg);border:1px solid var(--gold);color:var(--gold);padding:7px 10px;border-radius:4px;font-family:'Bebas Neue',sans-serif;font-size:0.95rem;letter-spacing:1px;">
+        <option value="home">HOME</option>
+        <option value="away">AWAY</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="player-setup-grid">
+    <div class="player-setup-card">
+      <div class="player-setup-title home" id="home-setup-title">HOME PLAYERS</div>
+      <div class="player-inputs" id="homePlayerInputs"></div>
+    </div>
+    <div class="player-setup-card">
+      <div class="player-setup-title away" id="away-setup-title">AWAY PLAYERS</div>
+      <div class="player-inputs" id="awayPlayerInputs"></div>
+    </div>
+  </div>
+
+  <div class="game-nav" id="gameNav"></div>
+
+  <div class="team-scoreboard">
+    <div class="scoreboard-header">
+      <div>
+        <div class="team-label home" id="sb-home-name">O'Leary's</div>
+      </div>
+      <div class="score-vs-block">
+        <div style="display:flex;gap:20px;justify-content:center;align-items:baseline;">
+          <div style="text-align:center;">
+            <div class="remaining-display home-rem" id="sb-home-rem">1001</div>
+            <div class="rem-label" id="sb-home-rem-label">REMAINING</div>
+          </div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--border);">—</div>
+          <div style="text-align:center;">
+            <div class="remaining-display away-rem" id="sb-away-rem">1001</div>
+            <div class="rem-label" id="sb-away-rem-label">REMAINING</div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:right;">
+        <div class="team-label away" id="sb-away-name">Vicky Dock</div>
+      </div>
+    </div>
+
+    <div class="game-result-banner" id="gameResultBanner"></div>
+
+    <div class="leg-table-wrap">
+      <div class="leg-section-title">LEG BY LEG SCORES — <span id="currentGameLabel">GAME 1</span></div>
+      <div style="overflow-x:auto;">
+        <table class="leg-table" id="legTable">
+          <!-- rendered by JS -->
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+    <button class="btn-secondary" onclick="clearCurrentGame()">CLEAR GAME</button>
+    <button class="btn-secondary" onclick="clearAllTeamGames()">RESET ALL TEAM GAMES</button>
+  </div>
+</div>
+
+<!-- ===== SINGLES ===== -->
+<div id="tab-singles" class="panel">
+
+  <div class="singles-setup">
+    <div><label>Starting Score</label>
+      <select id="singlesStart" onchange="onSinglesStartChange()" style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:4px;font-family:'Inter',sans-serif;font-size:0.875rem;">
+        <option value="501" selected>501</option>
+        <option value="401">401</option>
+        <option value="301">301</option>
+      </select>
+    </div>
+    <div><label>Player 1 Name</label><input type="text" id="singlesP1Name" value="" placeholder="Name..." onchange="onSinglesNameChange()"></div>
+    <div class="match-vs-badge" style="padding-bottom:4px;">V</div>
+    <div><label>Player 2 Name</label><input type="text" id="singlesP2Name" value="" placeholder="Name..." onchange="onSinglesNameChange()"></div>
+    <div><label>🎯 Throws First</label>
+      <select id="singlesFirstSide" onchange="onSinglesFirstChange()" style="background:var(--bg);border:1px solid var(--gold);color:var(--gold);padding:7px 10px;border-radius:4px;font-family:'Bebas Neue',sans-serif;font-size:0.95rem;letter-spacing:1px;">
+        <option value="p1">PLAYER 1</option>
+        <option value="p2">PLAYER 2</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="singles-nav" id="singlesNav"></div>
+
+  <div class="singles-board">
+    <div class="singles-header">
+      <div class="singles-player">
+        <div class="singles-player-name" id="s-p1-name">Player 1</div>
+        <div class="singles-remaining" id="s-p1-rem">501</div>
+        <div style="font-size:0.65rem;color:var(--gold);margin-top:4px;font-family:'Bebas Neue';letter-spacing:1px;" id="s-p1-first-badge"></div>
+      </div>
+      <div class="singles-vs">V</div>
+      <div class="singles-player singles-right">
+        <div class="singles-player-name" id="s-p2-name">Player 2</div>
+        <div class="singles-remaining away" id="s-p2-rem">501</div>
+        <div style="font-size:0.65rem;color:var(--gold);margin-top:4px;font-family:'Bebas Neue';letter-spacing:1px;" id="s-p2-first-badge"></div>
+      </div>
+    </div>
+
+    <div class="singles-leg-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Leg</th>
+            <th id="s-th-p1">P1 Score</th>
+            <th>P1 Left</th>
+            <th></th>
+            <th>P2 Left</th>
+            <th id="s-th-p2">P2 Score</th>
+          </tr>
+        </thead>
+        <tbody id="singlesLegsBody"></tbody>
+        <tfoot id="singlesLegsFoot"></tfoot>
+      </table>
+    </div>
+
+    <div class="singles-stats">
+      <div class="s-stat"><div class="s-stat-label">P1 Avg</div><div class="s-stat-val" id="s-avg-p1">—</div></div>
+      <div class="s-stat"><div class="s-stat-label">P2 Avg</div><div class="s-stat-val away" id="s-avg-p2">—</div></div>
+      <div class="s-stat"><div class="s-stat-label">P1 Best</div><div class="s-stat-val" id="s-best-p1">—</div></div>
+      <div class="s-stat"><div class="s-stat-label">P2 Best</div><div class="s-stat-val away" id="s-best-p2">—</div></div>
+      <div class="s-stat"><div class="s-stat-label">P1 100+</div><div class="s-stat-val" id="s-100-p1">0</div></div>
+      <div class="s-stat"><div class="s-stat-label">P2 100+</div><div class="s-stat-val away" id="s-100-p2">0</div></div>
+    </div>
+
+    <div style="display:flex;gap:8px;">
+      <button class="btn-secondary" onclick="clearCurrentSingles()">CLEAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SUMMARY ===== -->
+<div id="tab-summary" class="panel">
+
+  <div class="summary-scoreline">
+    <div class="summary-team">
+      <div class="summary-team-name" id="sum-home-name">HOME</div>
+      <div class="summary-team-score" id="sum-home-score">0</div>
+      <div class="summary-breakdown">Teams: <span id="sum-home-team-pts">0</span> &nbsp;|&nbsp; Singles: <span id="sum-home-singles-pts">0</span></div>
+    </div>
+    <div class="summary-dash">—</div>
+    <div class="summary-team">
+      <div class="summary-team-name" id="sum-away-name">AWAY</div>
+      <div class="summary-team-score" id="sum-away-score">0</div>
+      <div class="summary-breakdown">Teams: <span id="sum-away-team-pts">0</span> &nbsp;|&nbsp; Singles: <span id="sum-away-singles-pts">0</span></div>
+    </div>
+  </div>
+
+  <div class="sum-grid">
+    <div class="sum-card">
+      <div class="sum-card-title">TEAM GAME RESULTS</div>
+      <table class="sum-table">
+        <thead><tr><th>Game</th><th>Home Rem</th><th>Away Rem</th><th>Margin</th><th>Winner</th></tr></thead>
+        <tbody id="sum-team-results"></tbody>
+      </table>
+    </div>
+    <div class="sum-card">
+      <div class="sum-card-title">PLAYER AVERAGES — TEAM GAMES</div>
+      <table class="sum-table">
+        <thead><tr><th>Player</th><th>G1</th><th>G2</th><th>G3</th><th>Overall</th><th>Best Leg</th></tr></thead>
+        <tbody id="sum-player-avgs"></tbody>
+      </table>
+    </div>
+    <div class="sum-card">
+      <div class="sum-card-title">SINGLES RESULTS</div>
+      <table class="sum-table">
+        <thead><tr><th>Game</th><th>P1</th><th>P1 Left</th><th>P2 Left</th><th>P2</th><th>Winner</th></tr></thead>
+        <tbody id="sum-singles-results"></tbody>
+      </table>
+    </div>
+    <div class="sum-card">
+      <div class="sum-card-title">HIGH SCORES — ALL GAMES</div>
+      <table class="sum-table">
+        <thead><tr><th>Player</th><th>60+</th><th>80+</th><th>100+</th><th>120+</th></tr></thead>
+        <tbody id="sum-highscores"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+    <button class="btn-primary" onclick="buildSummary()">REFRESH</button>
+    <button class="btn-secondary" onclick="exportTxt()">EXPORT TXT</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- ===== SEASON ===== -->
+<div id="tab-season" class="panel">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+    <div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:2px;color:var(--gold);">SEASON RECORD</div>
+      <div style="font-size:0.72rem;color:var(--steel-dim);">After each match click <strong style="color:var(--gold);">+ ADD MATCH TO SEASON</strong>. Use <strong style="color:var(--gold);">💾 SAVE TO FILE</strong> to keep your season data — then <strong style="color:var(--gold);">📂 LOAD FROM FILE</strong> next time you open the scorer.</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn-primary" onclick="addMatchToSeason()">+ ADD MATCH TO SEASON</button>
+      <button class="btn-secondary" onclick="exportSeasonJSON()">💾 SAVE TO FILE</button>
+      <button class="btn-secondary" onclick="importSeasonJSON()">📂 LOAD FROM FILE</button>
+      <button class="btn-secondary" onclick="clearSeasonData()">CLEAR SEASON</button>
+    </div>
+  </div>
+
+
+  <!-- Match history -->
+  <div class="sum-card" style="margin-bottom:16px;">
+    <div class="sum-card-title">MATCH HISTORY</div>
+    <div style="overflow-x:auto;">
+      <table class="sum-table" id="season-history-table">
+        <thead>
+          <tr>
+            <th style="text-align:left;">Date</th>
+            <th style="text-align:left;">Team</th>
+            <th>Score</th>
+            <th>Team Pts</th>
+            <th>Singles Pts</th>
+            <th>Hi Finish</th>
+            <th>Result</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="season-matches-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Player season averages -->
+  <div class="sum-grid">
+    <div class="sum-card">
+      <div class="sum-card-title">PLAYER SEASON STATS — <span id="season-home-label">HOME</span></div>
+      <table class="sum-table">
+        <thead><tr><th>Player</th><th>M</th><th>Team Avg</th><th>Singles Avg</th><th>Best</th><th>100+</th><th>120+</th><th>Hi Finish</th></tr></thead>
+        <tbody id="season-player-avgs"></tbody>
+      </table>
+    </div>
+    <div class="sum-card">
+      <div class="sum-card-title">SINGLES SEASON RECORD</div>
+      <table class="sum-table">
+        <thead><tr><th>Player</th><th>P</th><th>W</th><th>L</th><th>Win%</th><th>Hi Finish</th></tr></thead>
+        <tbody id="season-singles-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ================================================================
+// STATE
+// ================================================================
+const NUM_TEAM_GAMES = 3;
+const NUM_SINGLES    = 6;
+const NUM_PLAYERS    = 6;
+const TEAM_START     = 1001;
+const AVG_CUTOFF     = 100; // stop averaging once remaining < 100
+
+let currentGame    = 0; // 0-indexed
+let currentSingles = 0; // 0-indexed
+
+let S = {
+  homeTeam: "O'Leary's",
+  awayTeam: "Vicky Dock",
+  date: '',
+  homePlayers: ['','','','','',''],
+  awayPlayers: ['','','','','',''],
+  singlesStart: 501,
+  teamFirstSide: 'home',    // which side throws first in team games ('home' or 'away')
+  singlesFirstSide: 'p1',   // which player throws first in singles ('p1' or 'p2')
+  // teamGames[g].throws = flat sequence of {side:'home'|'away', playerIdx:0-5, score:n}
+  // One "round" = 12 throws: H0,A0,H1,A1,...,H5,A5
+  teamGames: Array.from({length:NUM_TEAM_GAMES}, () => ({ throws:[] })),
+  // singles[g] = { p1name, p2name, p1scores:[], p2scores:[] }
+  singles: Array.from({length:NUM_SINGLES}, (_,i) => ({
+    p1name: '',
+    p2name: '',
+    p1scores: [],
+    p2scores: []
+  })),
+  season: []  // array of saved match records
+};
+
+// ================================================================
+// UTILS
+// ================================================================
+function avg(arr) {
+  const v = arr.filter(x => x > 0 && !isNaN(x));
+  return v.length ? v.reduce((a,b)=>a+b,0)/v.length : null;
+}
+function fmt(v, d=1) {
+  if (v===null||v===undefined||isNaN(v)) return '—';
+  return Number(v).toFixed(d);
+}
+function toast(msg, dur=2500) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+// Returns remaining score for a side given the throws array
+function teamRemaining(throws, side) {
+  let rem = TEAM_START;
+  throws.forEach(t => { if(t.side===side) rem -= t.score; });
+  return Math.max(0, rem);
+}
+// Given throwIdx (absolute), return {side, playerIdx} respecting who throws first
+function throwSideAndPlayer(throwIdx) {
+  const ROUND = NUM_PLAYERS * 2;
+  const posInRound = throwIdx % ROUND;
+  const pairIdx    = Math.floor(posInRound / 2);
+  // Even positions = first team, odd = second team
+  const firstSide  = S.teamFirstSide;
+  const secondSide = firstSide === 'home' ? 'away' : 'home';
+  const side = posInRound % 2 === 0 ? firstSide : secondSide;
+  return { side, playerIdx: pairIdx };
+}
+function teamWinner(g) {
+  const gd = S.teamGames[g];
+  const hrem = teamRemaining(gd.throws, 'home');
+  const arem = teamRemaining(gd.throws, 'away');
+  if (hrem === 0 && arem > 0) return 'home';
+  if (arem === 0 && hrem > 0) return 'away';
+  if (hrem === 0 && arem === 0) return 'home'; // tie, home wins (edge case)
+  return null;
+}
+// Scores for a given side/player across all throws
+function playerThrows(throws, side, playerIdx) {
+  return throws.filter(t=>t.side===side && t.playerIdx===playerIdx).map(t=>t.score);
+}
+function singlesWinner(g) {
+  const s = S.singles[g];
+  const p1rem = Math.max(0, S.singlesStart - s.p1scores.reduce((a,b)=>a+b,0));
+  const p2rem = Math.max(0, S.singlesStart - s.p2scores.reduce((a,b)=>a+b,0));
+  if (p1rem===0 && p2rem>0) return 'p1';
+  if (p2rem===0 && p1rem>0) return 'p2';
+  return null;
+}
+function totalScore() {
+  let home=0, away=0;
+  for(let g=0;g<NUM_TEAM_GAMES;g++) {
+    const w=teamWinner(g);
+    if(w==='home') home++; else if(w==='away') away++;
+  }
+  for(let g=0;g<NUM_SINGLES;g++) {
+    const w=singlesWinner(g);
+    if(w==='p1') home++; else if(w==='p2') away++;
+  }
+  return {home,away};
+}
+function updateHeaderScore() {
+  const {home,away}=totalScore();
+  document.getElementById('hdr-home-score').textContent=home;
+  document.getElementById('hdr-away-score').textContent=away;
+  document.getElementById('hdr-teams').innerHTML=
+    `${S.homeTeam} vs ${S.awayTeam}&nbsp;|&nbsp;<span id="hdr-date">${S.date}</span>`;
+}
+
+// ================================================================
+// SETUP — player inputs
+// ================================================================
+function buildPlayerInputs() {
+  ['home','away'].forEach(side => {
+    const container = document.getElementById(side+'PlayerInputs');
+    container.innerHTML = '';
+    const players = side==='home' ? S.homePlayers : S.awayPlayers;
+    players.forEach((name, i) => {
+      const wrap = document.createElement('div');
+      const id = side==='home' ? `hp${i}` : `ap${i}`;
+      wrap.innerHTML = `<label>P${i+1}</label>
+        <input type="text" id="${id}" value="${name}" placeholder="Name..." onchange="onPlayerNameChange()">`;
+      container.appendChild(wrap);
+    });
+  });
+}
+function onPlayerNameChange() {
+  for(let i=0;i<NUM_PLAYERS;i++) {
+    S.homePlayers[i] = document.getElementById(`hp${i}`).value;
+    S.awayPlayers[i] = document.getElementById(`ap${i}`).value;
+  }
+  renderTeamGame();
+}
+function onTeamFirstChange() {
+  S.teamFirstSide = document.getElementById('teamFirstSide').value;
+  // Clear current game — throwing order has changed
+  S.teamGames[currentGame] = { throws:[] };
+  renderTeamGame();
+  buildGameNav();
+  toast(`${S.teamFirstSide==='home'?S.homeTeam:S.awayTeam} throws first`);
+}
+function onSinglesFirstChange() {
+  const val = document.getElementById('singlesFirstSide').value;
+  S.singlesFirstSide = val;
+  // Store per-game so switching back remembers the setting
+  S.singles[currentSingles].firstSide = val;
+  // Only clear if scores already entered
+  if (S.singles[currentSingles].p1scores.length > 0 || S.singles[currentSingles].p2scores.length > 0) {
+    if (!confirm('Changing throws first order will clear scores for this singles game. Continue?')) {
+      // Revert dropdown
+      document.getElementById('singlesFirstSide').value = S.singles[currentSingles].firstSide === val
+        ? (val==='p1'?'p2':'p1') : val;
+      return;
+    }
+    S.singles[currentSingles].p1scores = [];
+    S.singles[currentSingles].p2scores = [];
+  }
+  renderSingles();
+  buildSinglesNav();
+  updateHeaderScore();
+  const s = S.singles[currentSingles];
+  const thrower = val==='p1' ? (s.p1name||'P1') : (s.p2name||'P2');
+  toast('🎯 ' + thrower + ' throws first');
+}
+function onSetupChange() {
+  S.homeTeam = document.getElementById('homeTeam').value || 'Home';
+  S.awayTeam = document.getElementById('awayTeam').value || 'Away';
+  document.getElementById('sb-home-name').textContent = S.homeTeam;
+  document.getElementById('sb-away-name').textContent = S.awayTeam;
+  document.getElementById('home-setup-title').textContent = S.homeTeam.toUpperCase()+' PLAYERS';
+  document.getElementById('away-setup-title').textContent = S.awayTeam.toUpperCase()+' PLAYERS';
+  updateFirstDropdowns();
+  updateHeaderScore();
+  buildGameNav();
+}
+function onDateChange() {
+  const d = document.getElementById('matchDate').value;
+  if (d) { const p=d.split('-'); S.date=`${p[2]}/${p[1]}/${p[0]}`; }
+  updateHeaderScore();
+}
+
+// ================================================================
+// GAME NAVIGATION
+// ================================================================
+function buildGameNav() {
+  const nav = document.getElementById('gameNav');
+  nav.innerHTML = '';
+  for(let g=0;g<NUM_TEAM_GAMES;g++) {
+    const btn = document.createElement('button');
+    btn.className = 'game-nav-btn' + (g===currentGame?' active':'');
+    const w = teamWinner(g);
+    if(w==='home') btn.classList.add('won-home');
+    else if(w==='away') btn.classList.add('won-away');
+    btn.textContent = `GAME ${g+1}`;
+    if(w) btn.textContent += w==='home' ? ` ✓ ${S.homeTeam}` : ` ✓ ${S.awayTeam}`;
+    btn.onclick = () => switchGame(g);
+    nav.appendChild(btn);
+  }
+}
+function switchGame(g) {
+  currentGame = g;
+  buildGameNav();
+  renderTeamGame();
+}
+
+// ================================================================
+// TEAM GAME RENDER
+// ================================================================
+function renderTeamGame() {
+  const gd = S.teamGames[currentGame];
+  document.getElementById('currentGameLabel').textContent = `GAME ${currentGame+1}`;
+  document.getElementById('sb-home-name').textContent = S.homeTeam;
+  document.getElementById('sb-away-name').textContent = S.awayTeam;
+
+  // Calculate running remainders
+  const hrem = teamRemaining(gd.throws, 'home');
+  const arem = teamRemaining(gd.throws, 'away');
+
+  document.getElementById('sb-home-rem').textContent = hrem;
+  document.getElementById('sb-away-rem').textContent = arem;
+
+  const winner = teamWinner(currentGame);
+  const banner = document.getElementById('gameResultBanner');
+  if (winner) {
+    const wName = winner==='home' ? S.homeTeam : S.awayTeam;
+    const loser = winner==='home' ? S.awayTeam : S.homeTeam;
+    const wrem = winner==='home' ? hrem : arem;
+    const lrem = winner==='home' ? arem : hrem;
+    const wFinish = winner==='home' ? hrem : arem;
+    const lFinish = winner==='home' ? arem : hrem;
+    // Find the final throw score (the checkout)
+    const lastThrow = gd.throws.length > 0 ? gd.throws[gd.throws.length-1].score : 0;
+    const checkoutNote = lastThrow >= 50 ? ` — CHECKOUT: ${lastThrow}` : (lastThrow > 0 ? ` — finished on ${lastThrow}` : '');
+    banner.textContent = `🎯 ${wName} WIN${checkoutNote}  |  ${loser} left: ${lFinish}`;
+    banner.className = 'game-result-banner ' + (winner==='home'?'home-win':'away-win');
+    banner.style.display = 'block';
+  } else {
+    banner.style.display = 'none';
+  }
+
+  // ── Build the round-by-round table ──────────────────────────────
+  // throws is flat: [H0,A0,H1,A1,...,H5,A5, H0,A0,...] repeating
+  // A "round" is 12 throws (all 6 pairs)
+  const ROUND = NUM_PLAYERS * 2; // 12
+  const throws = gd.throws;
+  const completedRounds = Math.floor(throws.length / ROUND);
+  const throwsInCurrentRound = throws.length % ROUND;
+  const numRoundsToShow = completedRounds + (winner ? 0 : 1);
+
+  // Per-player running totals for averages (only while rem >= cutoff)
+  const hAvgTot = Array(NUM_PLAYERS).fill(0), hAvgCnt = Array(NUM_PLAYERS).fill(0);
+  const aAvgTot = Array(NUM_PLAYERS).fill(0), aAvgCnt = Array(NUM_PLAYERS).fill(0);
+
+  // Snapshot remainders at start of each round
+  let hRem = TEAM_START, aRem = TEAM_START;
+
+  const table = document.getElementById('legTable');
+  table.innerHTML = '';
+
+  // ── Header — columns ordered by who throws first ──
+  const thead = table.createTHead();
+  const hrow = thead.insertRow();
+  const firstSideH  = S.teamFirstSide;
+  const secondSideH = firstSideH === 'home' ? 'away' : 'home';
+  const firstPlayers  = firstSideH  === 'home' ? S.homePlayers : S.awayPlayers;
+  const secondPlayers = secondSideH === 'home' ? S.homePlayers : S.awayPlayers;
+  const firstCls  = firstSideH  === 'home' ? 'player-header' : 'away-header';
+  const secondCls = secondSideH === 'home' ? 'player-header' : 'away-header';
+  let thHtml = '<th>Round</th>';
+  for(let p=0;p<NUM_PLAYERS;p++) {
+    thHtml += `<th class="${firstCls}">${firstPlayers[p]}</th><th class="${secondCls}">${secondPlayers[p]}</th>`;
+  }
+  thHtml += `<th>${S.homeTeam} Left</th><th>${S.awayTeam} Left</th>`;
+  hrow.innerHTML = thHtml;
+
+  const tbody = table.createTBody();
+
+  for(let r=0; r<numRoundsToShow; r++) {
+    const rStart = r * ROUND;
+    const isCurrentRound = (r === completedRounds) && !winner;
+    const isCompleteRound = r < completedRounds;
+
+    // Snapshot remainders at start of this round
+    const hRemAtStart = hRem;
+    const aRemAtStart = aRem;
+
+    const tr = tbody.insertRow();
+    if (isCurrentRound) tr.classList.add('active-leg');
+    else if (isCompleteRound) tr.classList.add('completed-leg');
+
+    let cells = `<td class="leg-num">${r+1}</td>`;
+
+    for(let p=0;p<NUM_PLAYERS;p++) {
+      const hThrowIdx = rStart + p*2;     // position of home player p in this round
+      const aThrowIdx = rStart + p*2 + 1; // position of away player p in this round
+      const throwPos  = throws.length;    // next throw index
+
+      // ── First-throwing player p (side = S.teamFirstSide) ──
+      const firstSide  = S.teamFirstSide;
+      const secondSide = firstSide === 'home' ? 'away' : 'home';
+      const firstAvgTot = firstSide === 'home' ? hAvgTot : aAvgTot;
+      const firstAvgCnt = firstSide === 'home' ? hAvgCnt : aAvgCnt;
+      const secondAvgTot = firstSide === 'home' ? aAvgTot : hAvgTot;
+      const secondAvgCnt = firstSide === 'home' ? aAvgCnt : hAvgCnt;
+      const firstRemAtStart  = firstSide === 'home' ? hRemAtStart : aRemAtStart;
+      const secondRemAtStart = firstSide === 'home' ? aRemAtStart : hRemAtStart;
+
+      if (hThrowIdx < throws.length) {
+        const t = throws[hThrowIdx];
+        const isHome = t.side === 'home';
+        const isCheckout = winner && hThrowIdx === throws.length - 1;
+        const cls = isCheckout ? 'checkout' : (t.score>=100 ? 'hi' : (isHome ? 'home-s' : 'away-s'));
+        cells += `<td><span class="entered-score ${cls}">${t.score}${isCheckout?' ✓':''}</span></td>`;
+        if (isHome) { if (hRemAtStart >= AVG_CUTOFF) { hAvgTot[p]+=t.score; hAvgCnt[p]++; } hRem = Math.max(0, hRem - t.score); }
+        else        { if (aRemAtStart >= AVG_CUTOFF) { aAvgTot[p]+=t.score; aAvgCnt[p]++; } aRem = Math.max(0, aRem - t.score); }
+      } else if (isCurrentRound && throwPos === hThrowIdx) {
+        const thisSide = throwSideAndPlayer(hThrowIdx).side;
+        const inputCls = thisSide === 'home' ? '' : ' away';
+        cells += `<td><input class="score-cell-input${inputCls}" type="number" min="0" max="150"
+          placeholder="—" id="tinp-${hThrowIdx}"
+          onkeydown="handleTeamThrow(event,${hThrowIdx})" onfocus="this.select()"></td>`;
+      } else {
+        cells += `<td></td>`;
+      }
+
+      if (aThrowIdx < throws.length) {
+        const t = throws[aThrowIdx];
+        const isHome = t.side === 'home';
+        const isCheckout = winner && aThrowIdx === throws.length - 1;
+        const cls = isCheckout ? 'checkout' : (t.score>=100 ? 'hi' : (isHome ? 'home-s' : 'away-s'));
+        cells += `<td><span class="entered-score ${cls}">${t.score}${isCheckout?' ✓':''}</span></td>`;
+        if (isHome) { if (hRemAtStart >= AVG_CUTOFF) { hAvgTot[p]+=t.score; hAvgCnt[p]++; } hRem = Math.max(0, hRem - t.score); }
+        else        { if (aRemAtStart >= AVG_CUTOFF) { aAvgTot[p]+=t.score; aAvgCnt[p]++; } aRem = Math.max(0, aRem - t.score); }
+      } else if (isCurrentRound && throwPos === aThrowIdx) {
+        const thisSide = throwSideAndPlayer(aThrowIdx).side;
+        const inputCls = thisSide === 'home' ? '' : ' away';
+        cells += `<td><input class="score-cell-input${inputCls}" type="number" min="0" max="150"
+          placeholder="—" id="tinp-${aThrowIdx}"
+          onkeydown="handleTeamThrow(event,${aThrowIdx})" onfocus="this.select()"></td>`;
+      } else {
+        cells += `<td></td>`;
+      }
+    }
+
+    // End-of-round remaining snapshot
+    const hRemAfter = isCompleteRound ? hRem : (isCurrentRound ? hRemAtStart : hRem);
+    const aRemAfter = isCompleteRound ? aRem : (isCurrentRound ? aRemAtStart : aRem);
+
+    if (isCompleteRound) {
+      cells += `<td class="leg-remaining ${hRem<AVG_CUTOFF?'danger':''}">${hRem}</td>`;
+      cells += `<td class="leg-remaining ${aRem<AVG_CUTOFF?'danger':''}">${aRem}</td>`;
+    } else {
+      cells += `<td class="leg-remaining">${hRem}</td><td class="leg-remaining">${aRem}</td>`;
+    }
+
+    tr.innerHTML = cells;
+  }
+
+  // ── Averages row ──
+  const avgRow = tbody.insertRow();
+  avgRow.className = 'avg-row';
+  let avgCells = `<td style="color:var(--steel-dim);font-size:0.68rem;letter-spacing:1px;">AVG</td>`;
+  for(let p=0;p<NUM_PLAYERS;p++) {
+    const ha = hAvgCnt[p]>0 ? hAvgTot[p]/hAvgCnt[p] : null;
+    const aa = aAvgCnt[p]>0 ? aAvgTot[p]/aAvgCnt[p] : null;
+    avgCells += `<td class="avg-val">${fmt(ha)}</td><td class="avg-val away-avg">${fmt(aa)}</td>`;
+  }
+  avgCells += `<td></td><td></td>`;
+  avgRow.innerHTML = avgCells;
+
+  updateHeaderScore();
+}
+
+// ================================================================
+// TEAM SCORE INPUT
+// throwIdx = absolute position in the flat throws array
+// Order: H0,A0,H1,A1,...,H5,A5 repeating
+// ================================================================
+function handleTeamThrow(e, throwIdx) {
+  if (e.key !== 'Enter' && e.key !== 'Tab') return;
+  e.preventDefault();
+  const val = parseInt(e.target.value);
+  if (isNaN(val) || val < 0 || val > 150) { toast('Max score is 150 (3 bullseyes)'); return; }
+
+  const gd = S.teamGames[currentGame];
+  if (throwIdx !== gd.throws.length) return; // stale input guard
+
+  // Determine side and player from throw position (respects throwsFirst)
+  const { side, playerIdx } = throwSideAndPlayer(throwIdx);
+
+  // Bust check — score must not exceed remaining for this side
+  const remBefore = teamRemaining(gd.throws, side);
+  if (val > remBefore) {
+    toast(`Bust! ${side==='home'?S.homeTeam:S.awayTeam} needs exactly ${remBefore}`);
+    e.target.value = '';
+    return;
+  }
+
+  gd.throws.push({ side, playerIdx, score: val });
+
+  if (val >= 100) toast(`🎯 ${S[side==='home'?'homePlayers':'awayPlayers'][playerIdx]}: ${val}!`);
+
+  // Check if game just won
+  const hrem = teamRemaining(gd.throws, 'home');
+  const arem = teamRemaining(gd.throws, 'away');
+    if (hrem===0 || arem===0) {
+      const wTeam = hrem===0 ? S.homeTeam : S.awayTeam;
+      const lTeam = hrem===0 ? S.awayTeam : S.homeTeam;
+      const lScore = hrem===0 ? arem : hrem;
+      const checkout = val; // the score that just finished the game
+      const checkMsg = checkout >= 50 ? ` 🎯 CHECKOUT: ${checkout}!` : '';
+      toast(`🏆 ${wTeam} WIN${checkMsg}  (${lTeam} left: ${lScore})`, 5000);
+    }
+
+  renderTeamGame();
+  buildGameNav();
+  updateHeaderScore();
+
+  setTimeout(() => {
+    const inp = document.getElementById(`tinp-${throwIdx+1}`);
+    const fallback = document.querySelector('input.score-cell-input');
+    if (inp) inp.focus(); else if (fallback) fallback.focus();
+  }, 60);
+}
+
+function clearCurrentGame() {
+  S.teamGames[currentGame] = { throws:[] };
+  renderTeamGame();
+  buildGameNav();
+  updateHeaderScore();
+  toast('Game cleared');
+}
+function clearAllTeamGames() {
+  if (!confirm('Reset all 3 team games?')) return;
+  S.teamGames = Array.from({length:NUM_TEAM_GAMES}, ()=>({throws:[]}));
+  renderTeamGame();
+  buildGameNav();
+  updateHeaderScore();
+  toast('All team games reset');
+}
+
+// ================================================================
+// SINGLES
+// ================================================================
+function buildSinglesNav() {
+  const nav = document.getElementById('singlesNav');
+  nav.innerHTML = '';
+  for(let g=0;g<NUM_SINGLES;g++) {
+    const btn = document.createElement('button');
+    btn.className = 'singles-nav-btn' + (g===currentSingles?' active':'');
+    const w = singlesWinner(g);
+    if(w==='p1') btn.classList.add('won-p1');
+    if(w==='p2') btn.classList.add('won-p2');
+    btn.textContent = `SINGLES ${g+1}`;
+    btn.onclick = () => switchSingles(g);
+    nav.appendChild(btn);
+  }
+}
+function switchSingles(g) {
+  currentSingles = g;
+  const s = S.singles[g];
+  document.getElementById('singlesP1Name').value = s.p1name;
+  document.getElementById('singlesP2Name').value = s.p2name;
+  // Restore the throws-first selection for this singles game
+  document.getElementById('singlesFirstSide').value = s.firstSide || 'p1';
+  updateFirstDropdowns();
+  buildSinglesNav();
+  renderSingles();
+}
+function onSinglesNameChange() {
+  const s = S.singles[currentSingles];
+  s.p1name = document.getElementById('singlesP1Name').value;
+  s.p2name = document.getElementById('singlesP2Name').value;
+  updateFirstDropdowns();
+  renderSingles();
+}
+
+function updateFirstDropdowns() {
+  // Team dropdown — show actual team names
+  const tSel = document.getElementById('teamFirstSide');
+  const tVal = tSel.value;
+  tSel.innerHTML = '<option value="home">' + S.homeTeam.toUpperCase() + '</option><option value="away">' + S.awayTeam.toUpperCase() + '</option>';
+  tSel.value = tVal;
+  // Singles dropdown — show actual player names for current singles game
+  const sSel = document.getElementById('singlesFirstSide');
+  const sVal = sSel.value;
+  const s = S.singles[currentSingles];
+  sSel.innerHTML = '<option value="p1">' + s.p1name.toUpperCase() + '</option><option value="p2">' + s.p2name.toUpperCase() + '</option>';
+  sSel.value = sVal;
+}
+function onSinglesStartChange() {
+  S.singlesStart = parseInt(document.getElementById('singlesStart').value);
+  // Clear all singles scores since starting point changed
+  S.singles.forEach(s => { s.p1scores=[]; s.p2scores=[]; });
+  renderSingles();
+  buildSinglesNav();
+  updateHeaderScore();
+  toast(`Starting score set to ${S.singlesStart}`);
+}
+
+function renderSingles() {
+  const s = S.singles[currentSingles];
+  const ss = S.singlesStart;
+
+  document.getElementById('s-p1-name').textContent = s.p1name;
+  document.getElementById('s-p2-name').textContent = s.p2name;
+  document.getElementById('s-th-p1').textContent = s.p1name;
+  document.getElementById('s-th-p2').textContent = s.p2name;
+  const thisFirstSide = s.firstSide || S.singlesFirstSide || 'p1';
+  document.getElementById('s-p1-first-badge').textContent = thisFirstSide==='p1' ? '🎯 THROWS FIRST' : '';
+  document.getElementById('s-p2-first-badge').textContent = thisFirstSide==='p2' ? '🎯 THROWS FIRST' : '';
+
+  const p1rem = Math.max(0, ss - s.p1scores.reduce((a,b)=>a+b,0));
+  const p2rem = Math.max(0, ss - s.p2scores.reduce((a,b)=>a+b,0));
+
+  const p1remEl = document.getElementById('s-p1-rem');
+  const p2remEl = document.getElementById('s-p2-rem');
+  p1remEl.textContent = p1rem;
+  p2remEl.textContent = p2rem;
+  p1remEl.className = 'singles-remaining' + (p1rem===0?' won':p1rem<AVG_CUTOFF?' danger':'');
+  p2remEl.className = 'singles-remaining away' + (p2rem===0?' won':p2rem<AVG_CUTOFF?' danger':'');
+
+  // Stats — only count legs where remaining was >= cutoff BEFORE that leg
+  const validP1 = [], validP2 = [];
+  let r1=ss, r2=ss;
+  const maxLegs = Math.max(s.p1scores.length, s.p2scores.length);
+  for(let i=0;i<maxLegs;i++) {
+    if(i<s.p1scores.length && r1>=AVG_CUTOFF) validP1.push(s.p1scores[i]);
+    if(i<s.p2scores.length && r2>=AVG_CUTOFF) validP2.push(s.p2scores[i]);
+    if(i<s.p1scores.length) r1=Math.max(0,r1-s.p1scores[i]);
+    if(i<s.p2scores.length) r2=Math.max(0,r2-s.p2scores[i]);
+  }
+  document.getElementById('s-avg-p1').textContent = fmt(avg(validP1));
+  document.getElementById('s-avg-p2').textContent = fmt(avg(validP2));
+  const p1b = s.p1scores.filter(x=>x>0); const p2b = s.p2scores.filter(x=>x>0);
+  document.getElementById('s-best-p1').textContent = p1b.length ? Math.max(...p1b) : '—';
+  document.getElementById('s-best-p2').textContent = p2b.length ? Math.max(...p2b) : '—';
+  document.getElementById('s-100-p1').textContent = s.p1scores.filter(x=>x>=100).length;
+  document.getElementById('s-100-p2').textContent = s.p2scores.filter(x=>x>=100).length;
+
+  // Legs table
+  const tbody = document.getElementById('singlesLegsBody');
+  const tfoot = document.getElementById('singlesLegsFoot');
+  tbody.innerHTML = ''; tfoot.innerHTML = '';
+  let run1=ss, run2=ss;
+  const winner = singlesWinner(currentSingles);
+  const totalLegs = Math.max(s.p1scores.length, s.p2scores.length) + (winner?0:1);
+
+  for(let leg=0;leg<totalLegs;leg++) {
+    const p1v = s.p1scores[leg];
+    const p2v = s.p2scores[leg];
+    const tr = document.createElement('tr');
+    const isActive = !winner && (leg===s.p1scores.length || leg===s.p2scores.length);
+    if(isActive) tr.className='active-row';
+
+    const p1after = p1v!==undefined ? Math.max(0,run1-p1v) : run1;
+    const p2after = p2v!==undefined ? Math.max(0,run2-p2v) : run2;
+
+    // Which player throws first this leg?
+    // Leg 0: per-game firstSide; subsequent legs alternate
+    const firstSideThisGame = s.firstSide || S.singlesFirstSide || 'p1';
+    const p1ThrowsFirst = (leg % 2 === 0)
+      ? firstSideThisGame === 'p1'
+      : firstSideThisGame === 'p2'; // alternate each leg
+
+    // P1 score cell
+    const p1IsCheckout = (p1v!==undefined) && singlesWinner(currentSingles)==='p1' && leg===s.p1scores.length-1;
+    const p1ScoreCell = p1v!==undefined
+      ? `<span class="entered-score ${p1IsCheckout?'checkout':(p1v>=100?'hi':'home-s')}">${p1v}${p1IsCheckout?' ✓':''}</span>`
+      : (!winner && leg===s.p1scores.length && (p1ThrowsFirst ? leg===s.p1scores.length : leg < s.p2scores.length || leg===s.p2scores.length)
+        ? `<input class="score-cell-input" type="number" min="0" max="150" placeholder="—"
+            id="si1-${leg}" onkeydown="handleSinglesKey(event,${leg},1)" onfocus="this.select()">`
+        : (!winner && leg===s.p1scores.length && !p1ThrowsFirst && leg<=s.p2scores.length
+          ? `<input class="score-cell-input" type="number" min="0" max="150" placeholder="—"
+              id="si1-${leg}" onkeydown="handleSinglesKey(event,${leg},1)" onfocus="this.select()">`
+          : ''));
+    const p2IsCheckout = (p2v!==undefined) && singlesWinner(currentSingles)==='p2' && leg===s.p2scores.length-1;
+    const p2ScoreCell = p2v!==undefined
+      ? `<span class="entered-score ${p2IsCheckout?'checkout':(p2v>=100?'hi':'away-s')}">${p2v}${p2IsCheckout?' ✓':''}</span>`
+      : (!winner && leg===s.p2scores.length
+        ? `<input class="score-cell-input away" type="number" min="0" max="150" placeholder="—"
+            id="si2-${leg}" onkeydown="handleSinglesKey(event,${leg},2)" onfocus="this.select()">`
+        : '');
+
+    const p1leftCls = p1after<AVG_CUTOFF&&p1v!==undefined ? 'danger':'';
+    const p2leftCls = p2after<AVG_CUTOFF&&p2v!==undefined ? 'danger':'';
+
+    tr.innerHTML = `
+      <td style="color:var(--steel-dim);font-size:0.72rem;">${leg+1}</td>
+      <td>${p1ScoreCell}</td>
+      <td style="font-family:'Bebas Neue';font-size:1rem;color:${p1v!==undefined?(p1after<AVG_CUTOFF?'var(--crimson-bright)':'var(--steel)'):'var(--text-dim)'};">${p1v!==undefined?p1after:run1}</td>
+      <td style="color:var(--border);font-size:0.7rem;">v</td>
+      <td style="font-family:'Bebas Neue';font-size:1rem;color:${p2v!==undefined?(p2after<AVG_CUTOFF?'var(--crimson-bright)':'var(--steel)'):'var(--text-dim)'};">${p2v!==undefined?p2after:run2}</td>
+      <td>${p2ScoreCell}</td>`;
+    tbody.appendChild(tr);
+
+    if(p1v!==undefined) run1=p1after;
+    if(p2v!==undefined) run2=p2after;
+  }
+
+  // Finish row
+  tfoot.innerHTML = `<tr style="background:rgba(212,160,23,0.06);">
+    <td colspan="2" style="text-align:right;color:var(--steel-dim);font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;">Finish:</td>
+    <td style="font-family:'Bebas Neue';font-size:1.1rem;color:var(--gold);">${run1}</td>
+    <td></td>
+    <td style="font-family:'Bebas Neue';font-size:1.1rem;color:var(--steel);">${run2}</td>
+    <td></td>
+  </tr>`;
+
+  // Auto focus
+  setTimeout(()=>{
+    const inp = document.querySelector('#singlesLegsBody input.score-cell-input');
+    if(inp) inp.focus();
+  },50);
+
+  updateHeaderScore();
+}
+
+function handleSinglesKey(e, leg, player) {
+  if(e.key!=='Enter'&&e.key!=='Tab') return;
+  e.preventDefault();
+  const val = parseInt(e.target.value);
+  if(isNaN(val)||val<0||val>150) { toast('Max score is 150 (3 bullseyes)'); return; }
+  const s = S.singles[currentSingles];
+  const scores = player===1 ? s.p1scores : s.p2scores;
+  if(scores.length!==leg) return;
+
+  // Bust check
+  const remBefore = player===1
+    ? Math.max(0, S.singlesStart - s.p1scores.reduce((a,b)=>a+b,0))
+    : Math.max(0, S.singlesStart - s.p2scores.reduce((a,b)=>a+b,0));
+  if (val > remBefore) {
+    const name = player===1 ? (s.p1name||'P1') : (s.p2name||'P2');
+    toast(`Bust! ${name} needs exactly ${remBefore}`);
+    e.target.value = '';
+    return;
+  }
+
+  scores.push(val);
+  if(val>=100) toast(`🎯 ${val}!`);
+  const rem = player===1
+    ? Math.max(0,S.singlesStart-s.p1scores.reduce((a,b)=>a+b,0))
+    : Math.max(0,S.singlesStart-s.p2scores.reduce((a,b)=>a+b,0));
+  if(rem===0) { toast(`🏆 ${player===1?s.p1name:s.p2name} WINS!`,4000); }
+  renderSingles();
+  buildSinglesNav();
+  updateHeaderScore();
+  // Jump to other player
+  setTimeout(()=>{
+    const inp = document.querySelector('#singlesLegsBody input.score-cell-input');
+    if(inp) inp.focus();
+  },60);
+}
+
+function clearCurrentSingles() {
+  S.singles[currentSingles].p1scores=[];
+  S.singles[currentSingles].p2scores=[];
+  renderSingles();
+  buildSinglesNav();
+  updateHeaderScore();
+  toast('Cleared');
+}
+
+// ================================================================
+// SUMMARY
+// ================================================================
+function buildSummary() {
+  const {home,away} = totalScore();
+  let homeTeamPts=0, awayTeamPts=0, homeSnglPts=0, awaySnglPts=0;
+  for(let g=0;g<NUM_TEAM_GAMES;g++){const w=teamWinner(g);if(w==='home')homeTeamPts++;else if(w==='away')awayTeamPts++;}
+  for(let g=0;g<NUM_SINGLES;g++){const w=singlesWinner(g);if(w==='p1')homeSnglPts++;else if(w==='p2')awaySnglPts++;}
+
+  document.getElementById('sum-home-name').textContent = S.homeTeam;
+  document.getElementById('sum-away-name').textContent = S.awayTeam;
+  document.getElementById('sum-home-score').textContent = home;
+  document.getElementById('sum-away-score').textContent = away;
+  document.getElementById('sum-home-team-pts').textContent = homeTeamPts;
+  document.getElementById('sum-away-team-pts').textContent = awayTeamPts;
+  document.getElementById('sum-home-singles-pts').textContent = homeSnglPts;
+  document.getElementById('sum-away-singles-pts').textContent = awaySnglPts;
+
+  // Team game results
+  const teamTbody = document.getElementById('sum-team-results');
+  teamTbody.innerHTML='';
+  for(let g=0;g<NUM_TEAM_GAMES;g++){
+    const gd=S.teamGames[g];
+    const hrem=teamRemaining(gd.throws,'home');
+    const arem=teamRemaining(gd.throws,'away');
+    const w=teamWinner(g);
+    const margin=Math.abs(hrem-arem);
+    teamTbody.innerHTML+=`<tr>
+      <td>Game ${g+1}</td>
+      <td class="val-gold">${hrem}</td>
+      <td class="val-steel">${arem}</td>
+      <td>${margin||'—'}</td>
+      <td>${w?`<span class="badge ${w==='home'?'green':''}">${w==='home'?S.homeTeam:S.awayTeam}</span>`:'<span style="color:var(--text-dim)">In play</span>'}</td>
+    </tr>`;
+  }
+
+  // Player averages — team games
+  const avgTbody = document.getElementById('sum-player-avgs');
+  avgTbody.innerHTML='';
+  const allPlayers = [
+    ...S.homePlayers.map((n,i)=>({name:n,side:'home',idx:i})),
+    ...S.awayPlayers.map((n,i)=>({name:n,side:'away',idx:i}))
+  ];
+  allPlayers.forEach(p => {
+    const gameAvgs = [];
+    let allValid=[], bestLeg=0;
+    for(let g=0;g<NUM_TEAM_GAMES;g++){
+      const gd=S.teamGames[g];
+      let rem=p.side==='home'?TEAM_START:TEAM_START, tot=0, cnt=0;
+      let hRun=TEAM_START, aRun=TEAM_START;
+      // Walk throws in order, tracking remaining for the player's side
+      gd.throws.forEach((t,ti)=>{
+        const remForSide = t.side==='home' ? hRun : aRun;
+        if(t.side===p.side && t.playerIdx===p.idx && remForSide>=AVG_CUTOFF){
+          tot+=t.score; cnt++;
+          if(t.score>bestLeg) bestLeg=t.score;
+          allValid.push(t.score);
+        }
+        if(t.side==='home') hRun=Math.max(0,hRun-t.score);
+        else aRun=Math.max(0,aRun-t.score);
+      });
+      gameAvgs.push(cnt>0?tot/cnt:null);
+    }
+    const overall=avg(allValid);
+    const teamLabel=p.side==='home'?S.homeTeam:S.awayTeam;
+    avgTbody.innerHTML+=`<tr>
+      <td>${p.name} <span style="font-size:0.65rem;color:var(--steel-dim);">${teamLabel}</span></td>
+      <td class="${p.side==='home'?'val-gold':'val-steel'}">${fmt(gameAvgs[0])}</td>
+      <td class="${p.side==='home'?'val-gold':'val-steel'}">${fmt(gameAvgs[1])}</td>
+      <td class="${p.side==='home'?'val-gold':'val-steel'}">${fmt(gameAvgs[2])}</td>
+      <td><span style="font-family:'Bebas Neue';font-size:1.1rem;color:var(--gold);">${fmt(overall)}</span></td>
+      <td>${bestLeg>0?`<span class="badge ${bestLeg>=100?'gold':''}">${bestLeg}</span>`:'—'}</td>
+    </tr>`;
+  });
+
+  // Singles results
+  const sTbody = document.getElementById('sum-singles-results');
+  sTbody.innerHTML='';
+  S.singles.forEach((s,i)=>{
+    const p1rem=Math.max(0,S.singlesStart-s.p1scores.reduce((a,b)=>a+b,0));
+    const p2rem=Math.max(0,S.singlesStart-s.p2scores.reduce((a,b)=>a+b,0));
+    const w=singlesWinner(i);
+    const hasData=s.p1scores.length||s.p2scores.length;
+    sTbody.innerHTML+=`<tr style="opacity:${hasData?1:0.4}">
+      <td>S${i+1}</td>
+      <td>${s.p1name}</td>
+      <td class="val-gold">${p1rem}</td>
+      <td class="val-steel">${p2rem}</td>
+      <td>${s.p2name}</td>
+      <td>${w?`<span class="badge ${w==='p1'?'green':''}">${w==='p1'?s.p1name:s.p2name}</span>`:'<span style="color:var(--text-dim)">—</span>'}</td>
+    </tr>`;
+  });
+
+  // High scores
+  const hsTbody = document.getElementById('sum-highscores');
+  hsTbody.innerHTML='';
+  // Team game player high scores
+  allPlayers.forEach(p=>{
+    const all=[];
+    S.teamGames.forEach(gd=>{
+      gd.throws.forEach(t=>{ if(t.side===p.side&&t.playerIdx===p.idx) all.push(t.score); });
+    });
+    if(!all.length) return;
+    hsTbody.innerHTML+=`<tr>
+      <td>${p.name} <span style="font-size:0.65rem;color:var(--steel-dim);">Team</span></td>
+      <td>${all.filter(x=>x>=60&&x<80).length||'—'}</td>
+      <td>${all.filter(x=>x>=80&&x<100).length||'—'}</td>
+      <td>${all.filter(x=>x>=100&&x<120).length||'—'}</td>
+      <td>${all.filter(x=>x>=120).length||'—'}</td>
+    </tr>`;
+  });
+  // Singles high scores
+  S.singles.forEach((s,i)=>{
+    const all=[...s.p1scores,...s.p2scores];
+    if(!all.length) return;
+    hsTbody.innerHTML+=`<tr>
+      <td>${s.p1name}/${s.p2name} <span style="font-size:0.65rem;color:var(--steel-dim);">S${i+1}</span></td>
+      <td>${all.filter(x=>x>=60&&x<80).length||'—'}</td>
+      <td>${all.filter(x=>x>=80&&x<100).length||'—'}</td>
+      <td>${all.filter(x=>x>=100&&x<120).length||'—'}</td>
+      <td>${all.filter(x=>x>=120).length||'—'}</td>
+    </tr>`;
+  });
+}
+
+function exportTxt() {
+  const {home,away}=totalScore();
+  const lines=[
+    `DARTS SCORER — ${S.homeTeam} vs ${S.awayTeam}`,
+    `Date: ${S.date||'—'} | Venue: ${document.getElementById('venue').value}`,
+    `FINAL SCORE: ${S.homeTeam} ${home} — ${away} ${S.awayTeam}`,
+    '',
+    '=== TEAM GAMES ===',
+  ];
+  S.teamGames.forEach((gd,g)=>{
+    lines.push(`\nGame ${g+1}:`);
+    lines.push(`  ${S.homeTeam} remaining: ${teamRemaining(gd.throws,'home')}`);
+    lines.push(`  ${S.awayTeam} remaining: ${teamRemaining(gd.throws,'away')}`);
+    const ROUND=NUM_PLAYERS*2;
+    const numRounds=Math.ceil(gd.throws.length/ROUND);
+    for(let r=0;r<numRounds;r++){
+      const rThrows=gd.throws.slice(r*ROUND,(r+1)*ROUND);
+      const homeParts=[], awayParts=[];
+      rThrows.forEach(t=>{
+        const name=t.side==='home'?S.homePlayers[t.playerIdx]:S.awayPlayers[t.playerIdx];
+        if(t.side==='home') homeParts.push(`${name}=${t.score}`);
+        else awayParts.push(`${name}=${t.score}`);
+      });
+      lines.push(`  Round ${r+1}: Home[${homeParts.join(',')}] Away[${awayParts.join(',')}]`);
+    }
+  });
+  lines.push('\n=== SINGLES ===');
+  S.singles.forEach((s,i)=>{
+    if(!s.p1scores.length&&!s.p2scores.length) return;
+    const p1rem=Math.max(0,S.singlesStart-s.p1scores.reduce((a,b)=>a+b,0));
+    const p2rem=Math.max(0,S.singlesStart-s.p2scores.reduce((a,b)=>a+b,0));
+    lines.push(`\nSingles ${i+1}: ${s.p1name} (${p1rem} left) vs ${s.p2name} (${p2rem} left)`);
+    lines.push(`  ${s.p1name}: ${s.p1scores.join(', ')}`);
+    lines.push(`  ${s.p2name}: ${s.p2scores.join(', ')}`);
+  });
+  const blob=new Blob([lines.join('\n')],{type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`Darts_${S.homeTeam}_vs_${S.awayTeam}.txt`;
+  a.click();
+}
+
+
+// ================================================================
+// SEASON SHEET
+// ================================================================
+const SEASON_KEY = 'dartsScorer_season_v1';
+
+function loadSeasonFromStorage() {
+  // Try localStorage first (works on web servers), fall back silently if blocked
+  try {
+    const raw = localStorage.getItem(SEASON_KEY);
+    if (raw) S.season = JSON.parse(raw);
+  } catch(e) { S.season = []; }
+}
+
+function saveSeasonToStorage() {
+  try { localStorage.setItem(SEASON_KEY, JSON.stringify(S.season)); } catch(e) {}
+}
+
+function exportSeasonJSON() {
+  const blob = new Blob([JSON.stringify(S.season, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'darts_season.json';
+  a.click();
+  toast('Season data exported — save this file to reload later');
+}
+
+function importSeasonJSON() {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json';
+  inp.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (Array.isArray(data)) {
+          S.season = data;
+          saveSeasonToStorage();
+          renderSeasonTab();
+          toast(`✅ Loaded ${data.length} match(es) from file`);
+        } else { toast('Invalid season file'); }
+      } catch(e) { toast('Could not read file'); }
+    };
+    reader.readAsText(file);
+  };
+  inp.click();
+}
+
+function getPlayerAvgsForSeason() {
+  // Per-player data for home team: team game averages + singles averages + highest finish
+  const playerData = [];
+  for (let p = 0; p < NUM_PLAYERS; p++) {
+    const name = S.homePlayers[p];
+    if (!name) continue;
+    // ── Team game stats ──
+    let teamTot = 0, teamCnt = 0, bestTeam = 0, hi100 = 0, hi120 = 0;
+    S.teamGames.forEach(gd => {
+      let rem = TEAM_START;
+      const ROUND = NUM_PLAYERS * 2;
+      gd.throws.forEach((t, ti) => {
+        const roundStart = Math.floor(ti / ROUND) * ROUND;
+        const remAtRoundStart = (() => {
+          let r = TEAM_START;
+          for (let i = 0; i < roundStart; i++) {
+            if (gd.throws[i].side === 'home') r = Math.max(0, r - gd.throws[i].score);
+          }
+          return r;
+        })();
+        if (t.side === 'home' && t.playerIdx === p) {
+          if (remAtRoundStart >= AVG_CUTOFF) { teamTot += t.score; teamCnt++; }
+          if (t.score > bestTeam) bestTeam = t.score;
+          if (t.score >= 120) hi120++;
+          else if (t.score >= 100) hi100++;
+        }
+      });
+    });
+    // ── Singles stats — find games where this player appears by name ──
+    let singlesTot = 0, singlesCnt = 0, bestSingles = 0, highestFinish = 0;
+    S.singles.forEach((sg, si) => {
+      const isP1 = sg.p1name === name;
+      const isP2 = sg.p2name === name;
+      if (!isP1 && !isP2) return;
+      const scores = isP1 ? sg.p1scores : sg.p2scores;
+      const w = singlesWinner(si);
+      const won = (isP1 && w==='p1') || (isP2 && w==='p2');
+      // Highest finish = last score if won
+      if (won && scores.length > 0) {
+        const lastScore = scores[scores.length - 1];
+        if (lastScore > highestFinish) highestFinish = lastScore;
+      }
+      let rem = S.singlesStart;
+      scores.forEach(s => {
+        if (rem >= AVG_CUTOFF) { singlesTot += s; singlesCnt++; }
+        if (s > bestSingles) bestSingles = s;
+        rem = Math.max(0, rem - s);
+      });
+    });
+    playerData.push({
+      name,
+      teamAvg:    teamCnt    > 0 ? teamTot    / teamCnt    : null,
+      singlesAvg: singlesCnt > 0 ? singlesTot / singlesCnt : null,
+      bestTeam, bestSingles, hi100, hi120, highestFinish
+    });
+  }
+  return playerData;
+}
+
+function addMatchToSeason() {
+  const {home, away} = totalScore();
+  // Collect player averages
+  const playerAvgs = getPlayerAvgsForSeason();
+  // Collect singles results
+  const singlesResults = S.singles.map((s, i) => {
+    const p1rem = Math.max(0, S.singlesStart - s.p1scores.reduce((a,b)=>a+b,0));
+    const p2rem = Math.max(0, S.singlesStart - s.p2scores.reduce((a,b)=>a+b,0));
+    const w = singlesWinner(i);
+    return { p1name: s.p1name, p2name: s.p2name, p1rem, p2rem, winner: w };
+  });
+  // Team game results
+  const teamResults = S.teamGames.map((gd, g) => {
+    const hrem = teamRemaining(gd.throws, 'home');
+    const arem = teamRemaining(gd.throws, 'away');
+    return { hrem, arem, winner: teamWinner(g) };
+  });
+  let homeTeamPts = 0, awayTeamPts = 0, homeSnglPts = 0, awaySnglPts = 0;
+  teamResults.forEach(r => { if(r.winner==='home') homeTeamPts++; else if(r.winner==='away') awayTeamPts++; });
+  singlesResults.forEach(r => { if(r.winner==='p1') homeSnglPts++; else if(r.winner==='p2') awaySnglPts++; });
+
+  // Highest finish across all singles (home players only)
+  const allHighestFinishes = playerAvgs.map(p => p.highestFinish || 0);
+  const matchHighestFinish = allHighestFinishes.length ? Math.max(...allHighestFinishes) : 0;
+
+  // Home singles results only (no opposition names stored)
+  const homeSinglesResults = S.singles.map((s, i) => {
+    const w = singlesWinner(i);
+    const isHomeP1 = S.homePlayers.includes(s.p1name);
+    const homePlayer = isHomeP1 ? s.p1name : s.p2name;
+    const homeWon = (isHomeP1 && w==='p1') || (!isHomeP1 && w==='p2');
+    const homePlayed = s.p1scores.length > 0 || s.p2scores.length > 0;
+    const homeScores = isHomeP1 ? s.p1scores : s.p2scores;
+    const homeRem = Math.max(0, S.singlesStart - homeScores.reduce((a,b)=>a+b,0));
+    const lastScore = homeScores.length > 0 ? homeScores[homeScores.length-1] : 0;
+    const finish = homeWon ? lastScore : 0;
+    return { homePlayer, homeWon, homePlayed, homeRem, finish };
+  });
+
+  const match = {
+    id: Date.now(),
+    date: S.date || new Date().toLocaleDateString('en-GB'),
+    homeTeam: S.homeTeam,
+    homeScore: home,
+    awayScore: away,
+    homeTeamPts,
+    awayTeamPts,
+    homeSnglPts,
+    awaySnglPts,
+    playerAvgs,
+    homeSinglesResults,
+    matchHighestFinish
+  };
+  S.season.push(match);
+  saveSeasonToStorage();
+  toast('✅ Match saved to season!', 3000);
+  renderSeasonTab();
+}
+
+function clearSeasonData() {
+  if (!confirm('Clear all season data? This cannot be undone.')) return;
+  S.season = [];
+  saveSeasonToStorage();
+  renderSeasonTab();
+  toast('Season cleared');
+}
+
+function deleteMatchFromSeason(id) {
+  S.season = S.season.filter(m => m.id !== id);
+  saveSeasonToStorage();
+  renderSeasonTab();
+  toast('Match removed');
+}
+
+function renderSeasonTab() {
+  document.getElementById('season-home-label').textContent = S.homeTeam.toUpperCase();
+
+  if (!S.season.length) {
+    document.getElementById('season-matches-body').innerHTML =
+      '<tr><td colspan="8" style="text-align:center;color:var(--steel-dim);padding:20px;">No matches recorded yet</td></tr>';
+    document.getElementById('season-player-avgs').innerHTML = '';
+    document.getElementById('season-singles-body').innerHTML = '';
+    return;
+  }
+
+  // ── Match history ──
+  const mBody = document.getElementById('season-matches-body');
+  mBody.innerHTML = '';
+  [...S.season].reverse().forEach(m => {
+    const homeWin = m.homeScore > m.awayScore;
+    const draw = m.homeScore === m.awayScore;
+    const resultCls = homeWin ? 'val-gold' : draw ? '' : 'val-steel';
+    const resultTxt = homeWin ? `${m.homeTeam} WIN` : draw ? 'DRAW' : `${m.awayTeam} WIN`;
+    mBody.innerHTML += `<tr>
+      <td style="font-size:0.75rem;color:var(--steel-dim);">${m.date}</td>
+      <td style="font-weight:600;">${m.homeTeam}</td>
+      <td style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--gold);text-align:center;">${m.homeScore} — ${m.awayScore}</td>
+      <td style="text-align:center;color:var(--text-dim);font-size:0.78rem;">${m.homeTeamPts}—${m.awayTeamPts}</td>
+      <td style="text-align:center;color:var(--text-dim);font-size:0.78rem;">${m.homeSnglPts}—${m.awaySnglPts}</td>
+      <td style="color:var(--success);font-family:'Bebas Neue';font-size:1rem;">${m.matchHighestFinish||'—'}</td>
+      <td><span class="${resultCls}" style="font-family:'Bebas Neue';font-size:0.9rem;letter-spacing:1px;">${resultTxt}</span></td>
+      <td><button onclick="deleteMatchFromSeason(${m.id})" style="background:none;border:none;color:var(--steel-dim);cursor:pointer;font-size:0.8rem;" title="Remove">✕</button></td>
+    </tr>`;
+  });
+
+
+  // ── Player season stats (home team only) ──
+  const playerSeason = {};
+  S.season.forEach(m => {
+    if (!m.playerAvgs) return;
+    m.playerAvgs.forEach(p => {
+      if (!p.name) return;
+      if (!playerSeason[p.name]) playerSeason[p.name] = {
+        matches: 0,
+        teamTot: 0, teamCnt: 0,
+        singlesTot: 0, singlesCnt: 0,
+        bestTeam: 0, bestSingles: 0,
+        hi100: 0, hi120: 0, highestFinish: 0
+      };
+      const ps = playerSeason[p.name];
+      ps.matches++;
+      if (p.teamAvg    !== null && p.teamAvg    !== undefined) { ps.teamTot    += p.teamAvg;    ps.teamCnt++; }
+      if (p.singlesAvg !== null && p.singlesAvg !== undefined) { ps.singlesTot += p.singlesAvg; ps.singlesCnt++; }
+      if ((p.bestTeam    || 0) > ps.bestTeam)    ps.bestTeam    = p.bestTeam;
+      if ((p.bestSingles || 0) > ps.bestSingles) ps.bestSingles = p.bestSingles;
+      ps.hi100 += (p.hi100 || 0);
+      ps.hi120 += (p.hi120 || 0);
+      if ((p.highestFinish || 0) > ps.highestFinish) ps.highestFinish = p.highestFinish;
+    });
+  });
+  const pBody = document.getElementById('season-player-avgs');
+  pBody.innerHTML = '';
+  const pSorted = Object.entries(playerSeason).sort((a,b) => {
+    const ta = a[1].teamCnt > 0 ? a[1].teamTot / a[1].teamCnt : 0;
+    const tb = b[1].teamCnt > 0 ? b[1].teamTot / b[1].teamCnt : 0;
+    return tb - ta;
+  });
+  pSorted.forEach(([name, ps]) => {
+    const teamAvg    = ps.teamCnt    > 0 ? ps.teamTot    / ps.teamCnt    : null;
+    const singlesAvg = ps.singlesCnt > 0 ? ps.singlesTot / ps.singlesCnt : null;
+    const bestOverall = Math.max(ps.bestTeam || 0, ps.bestSingles || 0);
+    pBody.innerHTML += `<tr>
+      <td style="font-weight:600;">${name}</td>
+      <td style="color:var(--text-dim);">${ps.matches}</td>
+      <td class="val-gold">${fmt(teamAvg)}</td>
+      <td class="val-steel">${fmt(singlesAvg)}</td>
+      <td>${bestOverall > 0 ? `<span class="badge ${bestOverall>=100?'gold':''}">${bestOverall}</span>` : '—'}</td>
+      <td style="color:var(--crimson-bright);">${ps.hi100||'—'}</td>
+      <td style="color:var(--gold);">${ps.hi120||'—'}</td>
+      <td style="color:var(--success);font-family:'Bebas Neue';font-size:1rem;">${ps.highestFinish||'—'}</td>
+    </tr>`;
+  });
+
+  // ── Singles season record (home players only) ──
+  const singlesRecord = {};
+  S.season.forEach(m => {
+    const results = m.homeSinglesResults || m.singlesResults || [];
+    results.forEach(r => {
+      // Support both old format (singlesResults) and new (homeSinglesResults)
+      const name = r.homePlayer || r.p1name;
+      if (!name) return;
+      if (!singlesRecord[name]) singlesRecord[name] = { p:0, w:0, l:0, hiFinish:0 };
+      const sr = singlesRecord[name];
+      if (r.homePlayed !== false && (r.homeRem !== undefined || r.p1rem !== undefined)) sr.p++;
+      if (r.homeWon || r.winner==='p1') { sr.w++; }
+      else if (r.winner==='p2') { sr.l++; }
+      else if (!r.homeWon && r.homePlayed) { sr.l++; }
+      if ((r.finish || 0) > sr.hiFinish) sr.hiFinish = r.finish;
+    });
+  });
+  const sBody = document.getElementById('season-singles-body');
+  sBody.innerHTML = '';
+  const sSorted = Object.entries(singlesRecord)
+    .filter(([,v]) => v.p > 0)
+    .sort((a,b) => (b[1].w/Math.max(b[1].p,1)) - (a[1].w/Math.max(a[1].p,1)));
+  sSorted.forEach(([name, sr]) => {
+    const pct = sr.p > 0 ? Math.round(sr.w/sr.p*100) : 0;
+    sBody.innerHTML += `<tr>
+      <td style="font-weight:600;">${name}</td>
+      <td style="color:var(--text-dim);">${sr.p}</td>
+      <td style="color:var(--success);">${sr.w}</td>
+      <td style="color:var(--crimson-bright);">${sr.l}</td>
+      <td><span style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:${pct>=50?'var(--gold)':'var(--steel-dim)'};">${pct}%</span></td>
+      <td style="color:var(--success);font-family:'Bebas Neue';font-size:1rem;">${sr.hiFinish||'—'}</td>
+    </tr>`;
+  });
+}
+
+// ================================================================
+// TAB SWITCHING
+// ================================================================
+function switchTab(tab, btn) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  btn.classList.add('active');
+  if(tab==='summary') buildSummary();
+  if(tab==='season') renderSeasonTab();
+}
+
+// ================================================================
+// INIT
+// ================================================================
+function init() {
+  loadSeasonFromStorage();
+  const today=new Date();
+  const iso=today.toISOString().split('T')[0];
+  document.getElementById('matchDate').value=iso;
+  onDateChange();
+  buildPlayerInputs();
+  buildGameNav();
+  renderTeamGame();
+  buildSinglesNav();
+  // Set singles player names from state
+  document.getElementById('singlesP1Name').value='';
+  document.getElementById('singlesP2Name').value='';
+  renderSingles();
+}
+init();
+</script>
+</body>
+</html>
