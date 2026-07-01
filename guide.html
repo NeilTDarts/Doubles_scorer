@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Darts Scorer — Visual Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0D0D0D; --surface:#161616; --surface2:#1e1e1e; --border:#2a2a2a;
+  --crimson:#8B0000; --crimson-br:#c0392b; --gold:#D4A017; --steel:#8fa3b1;
+  --text:#e8e8e8; --dim:#666; --green:#27ae60; --white:#f0f0f0;
+  --page:#f4f4f4; --ink:#1a1a1a; --accent:#8B0000;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--page); color:var(--ink); font-family:'Inter',sans-serif; }
+
+/* PAGE LAYOUT */
+.page { max-width:900px; margin:0 auto; padding:30px 20px 60px; }
+
+/* COVER */
+.cover {
+  background:linear-gradient(135deg,#0a0a0a 0%,#1a0000 50%,#0a0a0a 100%);
+  border-radius:12px; padding:50px 40px; margin-bottom:40px; text-align:center;
+  border:1px solid #3a0000;
+}
+.cover-logo { font-size:4rem; margin-bottom:16px; }
+.cover h1 { font-family:'Bebas Neue',sans-serif; font-size:3.5rem; letter-spacing:4px; color:#fff; margin-bottom:8px; }
+.cover h1 span { color:var(--gold); }
+.cover-sub { font-size:1rem; color:#aaa; letter-spacing:2px; margin-bottom:24px; }
+.cover-url { font-size:0.85rem; color:var(--gold); letter-spacing:1px; }
+
+/* SECTION HEADER */
+.section-header {
+  display:flex; align-items:center; gap:14px;
+  background:var(--accent); color:#fff;
+  border-radius:8px; padding:12px 20px; margin:40px 0 20px;
+}
+.section-num {
+  font-family:'Bebas Neue',sans-serif; font-size:2rem;
+  background:rgba(255,255,255,0.15); border-radius:50%;
+  width:42px; height:42px; display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.section-title { font-family:'Bebas Neue',sans-serif; font-size:1.5rem; letter-spacing:2px; }
+
+/* SCREEN MOCK */
+.screen-wrap { margin:20px 0; }
+.screen-label {
+  font-size:0.7rem; text-transform:uppercase; letter-spacing:2px;
+  color:var(--accent); font-weight:700; margin-bottom:8px;
+}
+.screen-mock {
+  background:var(--bg); border-radius:12px; overflow:hidden;
+  border:2px solid #333; position:relative;
+  box-shadow:0 8px 30px rgba(0,0,0,0.4);
+}
+/* Screen chrome bar */
+.screen-chrome {
+  background:#111; padding:6px 12px; display:flex; align-items:center; gap:8px;
+  border-bottom:1px solid #222;
+}
+.screen-chrome-dot { width:10px; height:10px; border-radius:50%; }
+.screen-chrome span { font-size:0.65rem; color:#555; margin-left:auto; }
+
+/* CALLOUT SYSTEM */
+.annotated { position:relative; }
+.callout-num {
+  position:absolute; width:24px; height:24px; border-radius:50%;
+  background:var(--gold); color:#000; font-weight:700; font-size:0.75rem;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 2px 8px rgba(0,0,0,0.4);
+  z-index:10; cursor:default;
+  border:2px solid #fff;
+}
+.callout-line {
+  position:absolute; background:var(--gold); z-index:9;
+  transform-origin:0 50%;
+}
+
+/* CALLOUT LIST */
+.callouts { margin-top:16px; display:flex; flex-direction:column; gap:8px; }
+.callout-item {
+  display:flex; align-items:flex-start; gap:12px;
+  background:#fff; border-radius:8px; padding:10px 14px;
+  border-left:3px solid var(--gold);
+  box-shadow:0 1px 4px rgba(0,0,0,0.08);
+}
+.callout-badge {
+  width:24px; height:24px; border-radius:50%;
+  background:var(--gold); color:#000; font-weight:700; font-size:0.75rem;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.callout-text strong { color:var(--accent); display:block; font-size:0.82rem; margin-bottom:2px; }
+.callout-text span { font-size:0.78rem; color:#555; line-height:1.4; }
+
+/* STEP BOXES */
+.steps { display:flex; flex-direction:column; gap:8px; margin:16px 0; }
+.step-item {
+  display:flex; align-items:flex-start; gap:12px;
+  background:#fff; border-radius:8px; padding:12px 16px;
+  box-shadow:0 1px 4px rgba(0,0,0,0.06);
+}
+.step-num {
+  width:28px; height:28px; border-radius:50%;
+  background:var(--accent); color:#fff; font-weight:700; font-size:0.85rem;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.step-content strong { display:block; font-size:0.85rem; color:var(--ink); margin-bottom:2px; }
+.step-content span { font-size:0.78rem; color:#666; }
+
+/* TIP BOX */
+.tip {
+  background:#fff8e7; border-left:4px solid var(--gold);
+  border-radius:0 8px 8px 0; padding:12px 16px; margin:14px 0;
+  font-size:0.82rem; color:#5a4000; line-height:1.5;
+}
+.tip strong { color:#8B6000; }
+
+.note {
+  background:#fff0f0; border-left:4px solid var(--accent);
+  border-radius:0 8px 8px 0; padding:12px 16px; margin:14px 0;
+  font-size:0.82rem; color:#5a0000; line-height:1.5;
+}
+
+/* DIVIDER */
+.divider { border:none; border-top:1px solid #ddd; margin:32px 0; }
+
+/* ── MOCK UI COMPONENTS ── */
+.mock-header {
+  background:linear-gradient(135deg,#0a0a0a,#1a0000,#0a0a0a);
+  padding:10px 16px; display:flex; align-items:center; gap:10px;
+  border-bottom:2px solid #8B0000;
+}
+.mock-header-title { font-family:'Bebas Neue',sans-serif; font-size:1.1rem; letter-spacing:2px; color:#fff; flex:1; }
+.mock-score-badge { font-family:'Bebas Neue',sans-serif; font-size:1.3rem; color:#D4A017; }
+
+.mock-tabs { background:#141414; display:flex; border-bottom:1px solid #222; }
+.mock-tab {
+  font-family:'Bebas Neue',sans-serif; font-size:0.75rem; letter-spacing:1px;
+  padding:10px 16px; color:#555; border-bottom:3px solid transparent;
+}
+.mock-tab.active { color:#D4A017; border-bottom-color:#D4A017; }
+
+.mock-setup-bar {
+  background:#141414; padding:12px 16px; display:flex; gap:12px; flex-wrap:wrap;
+  border-bottom:1px solid #222;
+}
+.mock-field { display:flex; flex-direction:column; gap:4px; }
+.mock-field label { font-size:0.55rem; text-transform:uppercase; letter-spacing:1px; color:#555; }
+.mock-field input {
+  background:#0D0D0D; border:1px solid #2a2a2a; color:#e8e8e8;
+  padding:5px 8px; border-radius:4px; font-size:0.75rem; width:90px;
+}
+.mock-field input.gold { border-color:#D4A017; color:#D4A017; width:70px; }
+.mock-field input.short { width:60px; }
+
+.mock-section-title {
+  font-family:'Bebas Neue',sans-serif; font-size:0.7rem; letter-spacing:2px;
+  color:#555; padding:8px 16px 4px;
+}
+.mock-player-grid {
+  display:grid; grid-template-columns:repeat(6,1fr); gap:6px; padding:8px 16px;
+}
+.mock-player-card {
+  background:#1e1e1e; border:1px solid #2a2a2a; border-radius:4px; padding:6px 8px;
+}
+.mock-player-name { font-size:0.6rem; color:#888; margin-bottom:4px; }
+.mock-player-input {
+  background:#0D0D0D; border:1px solid #2a2a2a; color:#e8e8e8;
+  padding:3px 5px; border-radius:3px; font-size:0.7rem; width:100%;
+}
+
+.mock-game-tabs { display:flex; gap:6px; padding:10px 16px 0; }
+.mock-game-tab {
+  background:#1e1e1e; border:1px solid #2a2a2a; color:#555;
+  font-family:'Bebas Neue',sans-serif; font-size:0.75rem; letter-spacing:1px;
+  padding:6px 14px; border-radius:4px;
+}
+.mock-game-tab.active { background:#8B0000; border-color:#8B0000; color:#fff; }
+
+.mock-scoreboard-header {
+  background:linear-gradient(90deg,#1a0000,#0d0d0d,#1a0000);
+  padding:10px 16px; display:grid; grid-template-columns:1fr auto 1fr;
+  align-items:center; border-top:1px solid #2a2a2a;
+}
+.mock-team-label { font-family:'Bebas Neue',sans-serif; font-size:0.9rem; color:#fff; }
+.mock-team-label.right { text-align:right; }
+.mock-remaining { font-family:'Bebas Neue',sans-serif; font-size:2rem; color:#D4A017; text-align:center; }
+.mock-remaining small { display:block; font-size:0.5rem; color:#555; letter-spacing:1px; font-family:'Inter',sans-serif; }
+
+.mock-quickbar {
+  background:#141414; padding:6px 16px; display:flex; gap:6px; align-items:center;
+  border-bottom:1px solid #222;
+}
+.mock-quickbar-label { font-size:0.55rem; text-transform:uppercase; letter-spacing:1px; color:#555; }
+.mock-qs-btn {
+  background:#1e1e1e; border:1px solid #2a2a2a; color:#888;
+  font-family:'Bebas Neue',sans-serif; font-size:0.85rem;
+  padding:3px 10px; border-radius:3px; cursor:pointer;
+}
+
+.mock-leg-table { padding:10px 16px; }
+.mock-leg-table table { width:100%; border-collapse:collapse; font-size:0.65rem; }
+.mock-leg-table th {
+  background:#1e1e1e; color:#555; font-size:0.55rem; text-transform:uppercase;
+  letter-spacing:1px; padding:5px 4px; text-align:center; border-bottom:1px solid #2a2a2a;
+}
+.mock-leg-table td {
+  padding:4px 4px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.03); color:#888;
+}
+.mock-leg-table td.gold { color:#D4A017; font-family:'Bebas Neue',sans-serif; font-size:0.85rem; }
+.mock-leg-table td.active { background:rgba(212,160,23,0.05); }
+.mock-leg-table input {
+  background:#0D0D0D; border:1px solid #D4A017; color:#D4A017;
+  font-family:'Bebas Neue',sans-serif; font-size:0.8rem;
+  width:36px; padding:2px 4px; border-radius:2px; text-align:center;
+}
+
+/* ROUND CHECK MOCK */
+.mock-rc-overlay {
+  background:#0D0D0D; border:1px solid #8B0000; border-radius:8px; margin:12px 16px;
+}
+.mock-rc-header {
+  background:linear-gradient(135deg,#1a0000,#0d0d0d);
+  padding:10px 14px; border-bottom:1px solid #8B0000; border-radius:7px 7px 0 0;
+}
+.mock-rc-title { font-family:'Bebas Neue',sans-serif; font-size:1rem; letter-spacing:2px; color:#D4A017; }
+.mock-rc-sub { font-size:0.6rem; color:#555; margin-top:2px; }
+.mock-rc-totals {
+  display:grid; grid-template-columns:1fr auto 1fr; gap:8px; align-items:center;
+  background:#161616; border:1px solid #2a2a2a; border-radius:6px;
+  padding:10px 12px; margin:10px 14px 6px;
+}
+.mock-rc-team-name { font-size:0.55rem; text-transform:uppercase; letter-spacing:1px; color:#555; margin-bottom:2px; }
+.mock-rc-rem { font-family:'Bebas Neue',sans-serif; font-size:1.8rem; color:#D4A017; line-height:1; }
+.mock-rc-rem.away { color:#8fa3b1; text-align:right; }
+.mock-rc-sub-total { font-size:0.6rem; color:#555; margin-top:2px; }
+.mock-rc-sub-total.right { text-align:right; }
+.mock-rc-mid { text-align:center; }
+.mock-rc-badge {
+  font-family:'Bebas Neue',sans-serif; font-size:0.75rem; letter-spacing:1px;
+  padding:3px 8px; border-radius:3px;
+}
+.mock-rc-badge.ok { background:rgba(39,174,96,0.15); color:#27ae60; border:1px solid #27ae60; }
+.mock-rc-badge.diff { background:rgba(139,0,0,0.15); color:#c0392b; border:1px solid #c0392b; }
+.mock-rc-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:0 14px 10px; }
+.mock-rc-section-title { font-family:'Bebas Neue',sans-serif; font-size:0.65rem; letter-spacing:2px; color:#D4A017; margin-bottom:5px; border-bottom:1px solid #2a2a2a; padding-bottom:3px; }
+.mock-rc-section-title.away { color:#8fa3b1; }
+.mock-rc-row { display:flex; align-items:center; gap:6px; background:#1e1e1e; border:1px solid #2a2a2a; border-radius:4px; padding:4px 8px; margin-bottom:4px; }
+.mock-rc-player { flex:1; font-size:0.65rem; color:#e8e8e8; font-weight:600; }
+.mock-rc-score { font-family:'Bebas Neue',sans-serif; font-size:1rem; color:#D4A017; min-width:30px; text-align:center; }
+.mock-rc-score.away { color:#8fa3b1; }
+.mock-rc-edit { background:#2a2a2a; border:none; color:#555; font-size:0.6rem; padding:2px 6px; border-radius:3px; }
+.mock-rc-footer { padding:8px 14px; border-top:1px solid #2a2a2a; display:flex; gap:8px; justify-content:flex-end; }
+.mock-btn-sec { background:#1e1e1e; border:1px solid #2a2a2a; color:#888; font-family:'Bebas Neue',sans-serif; font-size:0.7rem; letter-spacing:1px; padding:5px 12px; border-radius:4px; }
+.mock-btn-pri { background:#8B0000; border:none; color:#fff; font-family:'Bebas Neue',sans-serif; font-size:0.7rem; letter-spacing:1px; padding:5px 12px; border-radius:4px; }
+
+/* SINGLES MOCK */
+.mock-singles-setup {
+  background:#141414; padding:10px 16px; display:flex; gap:10px; flex-wrap:wrap;
+  border-bottom:1px solid #222; align-items:flex-end;
+}
+.mock-singles-header {
+  background:linear-gradient(135deg,#1a0000,#0d0d0d);
+  border:1px solid #8B0000; border-radius:6px; padding:12px 16px;
+  display:grid; grid-template-columns:1fr auto 1fr; align-items:center;
+  margin:10px 16px;
+}
+.mock-singles-player { }
+.mock-singles-player.right { text-align:right; }
+.mock-singles-name { font-family:'Bebas Neue',sans-serif; font-size:0.85rem; color:#e8e8e8; margin-bottom:3px; }
+.mock-singles-rem { font-family:'Bebas Neue',sans-serif; font-size:2rem; color:#D4A017; line-height:1; }
+.mock-singles-rem.away { color:#8fa3b1; }
+.mock-singles-vs { font-family:'Bebas Neue',sans-serif; color:#333; font-size:0.9rem; text-align:center; }
+.mock-first-btn {
+  border:2px solid #D4A017; color:#D4A017; background:rgba(212,160,23,0.08);
+  font-family:'Bebas Neue',sans-serif; font-size:0.65rem; letter-spacing:1px;
+  padding:5px 8px; border-radius:5px; text-align:center;
+}
+
+/* MOBILE MOCK */
+.mobile-frame {
+  width:280px; margin:0 auto;
+  background:var(--bg); border:2px solid #333; border-radius:16px; overflow:hidden;
+  box-shadow:0 8px 30px rgba(0,0,0,0.5);
+}
+.mobile-status { background:#111; height:20px; display:flex; align-items:center; justify-content:center; }
+.mobile-status-dot { width:6px; height:6px; border-radius:50%; background:#333; }
+
+.mock-numpad {
+  display:grid; grid-template-columns:repeat(3,1fr); gap:5px;
+  padding:8px 12px 10px;
+}
+.mock-np-btn {
+  background:#1e1e1e; border:1px solid #2a2a2a; color:#e8e8e8;
+  font-family:'Bebas Neue',sans-serif; font-size:1.2rem; border-radius:8px;
+  height:42px; display:flex; align-items:center; justify-content:center;
+}
+.mock-np-btn.enter {
+  grid-column:span 3; background:#8B0000; border-color:#8B0000; color:#fff;
+  font-size:0.85rem; letter-spacing:2px; height:38px;
+}
+.mock-np-btn.zero { grid-column:span 2; }
+.mock-np-display {
+  background:#1e1e1e; border:2px solid #D4A017; border-radius:8px;
+  margin:6px 12px; height:46px;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Bebas Neue',sans-serif; font-size:2.2rem; color:#D4A017;
+}
+.mock-undo-bar {
+  display:flex; gap:5px; padding:5px 12px; border-top:1px solid #222;
+}
+.mock-undo-btn {
+  flex:1; background:#1e1e1e; border:1px solid #2a2a2a; color:#555;
+  font-family:'Bebas Neue',sans-serif; font-size:0.65rem; letter-spacing:1px;
+  padding:6px; border-radius:5px; text-align:center;
+}
+
+/* ROUND PROGRESS */
+.mock-pips { display:flex; gap:3px; padding:5px 12px; align-items:center; }
+.mock-pip-label { font-size:0.55rem; color:#555; margin-right:4px; }
+.mock-pip { width:14px; height:6px; border-radius:2px; background:#1e1e1e; border:1px solid #2a2a2a; }
+.mock-pip.home { background:rgba(212,160,23,0.5); border-color:#D4A017; }
+.mock-pip.away { background:rgba(143,163,177,0.4); border-color:#8fa3b1; }
+.mock-pip.current { background:#D4A017; }
+
+/* SEASON MOCK */
+.mock-season-card {
+  background:#141414; border:1px solid #2a2a2a; border-radius:6px;
+  margin:8px 16px; overflow:hidden;
+}
+.mock-season-card-title {
+  background:linear-gradient(90deg,#1a0000,#1e1e1e);
+  padding:7px 12px; font-family:'Bebas Neue',sans-serif; font-size:0.7rem;
+  letter-spacing:2px; color:#c0392b; border-bottom:1px solid #2a2a2a;
+}
+.mock-season-table { width:100%; border-collapse:collapse; font-size:0.6rem; }
+.mock-season-table th { background:#1e1e1e; color:#555; padding:4px 8px; text-align:left; border-bottom:1px solid #2a2a2a; font-size:0.55rem; text-transform:uppercase; letter-spacing:1px; }
+.mock-season-table td { padding:5px 8px; border-bottom:1px solid rgba(255,255,255,0.03); color:#888; }
+.mock-season-table td.gold { color:#D4A017; font-family:'Bebas Neue',sans-serif; font-size:0.85rem; }
+.mock-season-table td.result { color:#27ae60; font-weight:700; }
+.mock-season-btns { display:flex; gap:6px; padding:8px 16px; }
+.mock-season-btn-pri { background:#8B0000; border:none; color:#fff; font-family:'Bebas Neue',sans-serif; font-size:0.65rem; letter-spacing:1px; padding:6px 12px; border-radius:4px; }
+.mock-season-btn-sec { background:#1e1e1e; border:1px solid #2a2a2a; color:#555; font-family:'Bebas Neue',sans-serif; font-size:0.65rem; letter-spacing:1px; padding:6px 12px; border-radius:4px; }
+
+/* LANDING MOCK */
+.mock-landing { background:var(--bg); padding:20px 24px; }
+.mock-landing-title { font-family:'Bebas Neue',sans-serif; font-size:1.4rem; letter-spacing:3px; color:#fff; text-align:center; margin-bottom:4px; }
+.mock-landing-title span { color:#D4A017; }
+.mock-landing-sub { font-size:0.6rem; color:#555; text-align:center; margin-bottom:20px; letter-spacing:2px; }
+.mock-card {
+  background:#141414; border:1px solid #2a2a2a; border-radius:10px; padding:14px 16px;
+  display:flex; align-items:center; gap:12px; margin-bottom:10px;
+}
+.mock-card-icon { font-size:1.4rem; width:36px; text-align:center; }
+.mock-card-body { flex:1; }
+.mock-card-title { font-family:'Bebas Neue',sans-serif; font-size:0.95rem; letter-spacing:1px; color:#D4A017; margin-bottom:2px; }
+.mock-card-desc { font-size:0.6rem; color:#555; line-height:1.4; }
+.mock-card-arrow { color:#555; font-size:0.9rem; }
+.mock-or { text-align:center; font-size:0.6rem; color:#444; margin:4px 0; }
+
+/* NUMPAD FLOATING */
+.mock-floating-numpad {
+  position:absolute; top:30px; right:12px;
+  background:#161616; border:2px solid #8B0000; border-radius:10px;
+  width:130px; z-index:10;
+  box-shadow:0 4px 20px rgba(0,0,0,0.6);
+}
+.mock-fnp-handle {
+  background:linear-gradient(135deg,#1a0000,#0d0d0d);
+  padding:5px 8px; border-radius:8px 8px 0 0;
+  display:flex; align-items:center; justify-content:space-between;
+  border-bottom:1px solid #2a2a2a;
+}
+.mock-fnp-title { font-family:'Bebas Neue',sans-serif; font-size:0.6rem; color:#555; letter-spacing:1px; }
+.mock-fnp-close { color:#555; font-size:0.7rem; }
+.mock-fnp-display {
+  background:#0D0D0D; border:1px solid #D4A017; border-radius:5px;
+  margin:5px 6px; height:28px;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Bebas Neue',sans-serif; font-size:1.2rem; color:#D4A017;
+}
+.mock-fnp-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:3px; padding:0 5px 5px; }
+.mock-fnp-btn {
+  background:#1e1e1e; border:1px solid #2a2a2a; color:#e8e8e8;
+  font-family:'Bebas Neue',sans-serif; font-size:0.85rem; border-radius:5px;
+  height:26px; display:flex; align-items:center; justify-content:center;
+}
+.mock-fnp-btn.enter { grid-column:span 3; background:#8B0000; border-color:#8B0000; color:#fff; font-size:0.65rem; letter-spacing:1px; height:24px; }
+
+/* INPUT MODE */
+.mock-input-mode-btn {
+  background:#1e1e1e; border:1px solid #D4A017; color:#D4A017;
+  font-family:'Bebas Neue',sans-serif; font-size:0.65rem; letter-spacing:1px;
+  padding:5px 10px; border-radius:4px;
+}
+
+@media print {
+  .page { padding:10px; }
+  .section-header { margin:20px 0 12px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-logo">🎯</div>
+  <h1>DARTS <span>SCORER</span></h1>
+  <div class="cover-sub">VISUAL NAVIGATION GUIDE</div>
+  <div class="cover-url">NeilTDarts.github.io/Doubles_scorer</div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- SECTION 1: OPENING THE APP -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="section-header">
+  <div class="section-num">1</div>
+  <div class="section-title">Opening the App</div>
+</div>
+
+<p style="font-size:0.85rem;color:#444;margin-bottom:16px;line-height:1.6;">
+  Go to the URL or tap your home screen shortcut. You land on the choice screen — pick the version for your device.
+</p>
+
+<div class="screen-wrap">
+  <div class="screen-label">Landing Page</div>
+  <div class="screen-mock annotated" style="position:relative;">
+    <div class="screen-chrome">
+      <div class="screen-chrome-dot" style="background:#ff5f56;"></div>
+      <div class="screen-chrome-dot" style="background:#ffbd2e;"></div>
+      <div class="screen-chrome-dot" style="background:#27c93f;"></div>
+      <span>NeilTDarts.github.io/Doubles_scorer</span>
+    </div>
+    <div class="mock-landing">
+      <div class="mock-landing-title">DARTS <span>SCORER</span></div>
+      <div class="mock-landing-sub">DOUBLES BOARD · LEAGUE SCORER</div>
+      <div class="mock-card" style="border-color:#8B0000;">
+        <div class="mock-card-icon">📱</div>
+        <div class="mock-card-body">
+          <div class="mock-card-title">MOBILE SCORER</div>
+          <div class="mock-card-desc">Score entry at the oche — big numpad, one throw at a time</div>
+        </div>
+        <div class="mock-card-arrow">›</div>
+      </div>
+      <div class="mock-or">— or —</div>
+      <div class="mock-card" style="border-color:#B8860B;">
+        <div class="mock-card-icon">💻</div>
+        <div class="mock-card-body">
+          <div class="mock-card-title" style="color:#888;">FULL SCORER</div>
+          <div class="mock-card-desc">Complete match view with averages and season stats</div>
+        </div>
+        <div class="mock-card-arrow">›</div>
+      </div>
+    </div>
+    <!-- callout numbers -->
+    <div class="callout-num" style="top:78px;right:8px;">1</div>
+    <div class="callout-num" style="top:142px;right:8px;">2</div>
+  </div>
+  <div class="callouts">
+    <div class="callout-item">
+      <div class="callout-badge">1</div>
+      <div class="callout-text"><strong>Mobile Scorer</strong><span>Tap here on your phone. Big numpad, no keyboard. Use this at the oche during the match.</span></div>
+    </div>
+    <div class="callout-item">
+      <div class="callout-badge">2</div>
+      <div class="callout-text"><strong>Full Scorer</strong><span>Tap here on a laptop or tablet. Shows all players, averages, round check and season stats.</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="tip"><strong>Add to home screen</strong> so it opens like an app. iPhone: tap Share → Add to Home Screen. Android: tap ⋮ → Add to Home Screen.</div>
+
+<hr class="divider">
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- SECTION 2: FULL SCORER SETUP -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="section-header">
+  <div class="section-num">2</div>
+  <div class="section-title">Full Scorer — Setup</div>
+</div>
+
+<p style="font-size:0.85rem;color:#444;margin-bottom:16px;line-height:1.6;">Fill in the setup bar before the match starts. Everything here is editable at any point during the match.</p>
+
+<div class="screen-wrap">
+  <div class="screen-label">Team Games — Setup Bar</div>
+  <div class="screen-mock annotated" style="position:relative;">
+    <div class="screen-chrome"><div class="screen-chrome-dot" style="background:#ff5f56;"></div><div class="screen-chrome-dot" style="background:#ffbd2e;"></div><div class="screen-chrome-dot" style="background:#27c93f;"></div></div>
+    <div class="mock-header">
+      <div class="mock-header-title">🎯 DARTS <span style="color:#D4A017;">SCORER</span></div>
+      <div class="mock-score-badge">0 — 0</div>
+    </div>
+    <div class="mock-tabs">
+      <div class="mock-tab active">⚡ TEAM GAMES</div>
+      <div class="mock-tab">🎯 SINGLES</div>
+      <div class="mock-tab">📊 SUMMARY</div>
+      <div class="mock-tab">🏆 SEASON</div>
+    </div>
+    <div class="mock-setup-bar">
+      <div class="mock-field"><label>Home Team</label><input value="O'Leary's"></div>
+      <div class="mock-field"><label>Away Team</label><input value="Vicky Dock"></div>
+      <div class="mock-field"><label>Venue</label><input value="O'Leary's" class="short"></div>
+      <div class="mock-field"><label>Date</label><input value="01/07/2026" class="short"></div>
+      <div class="mock-field"><label>🎯 Throws First</label><input value="HOME" class="gold"></div>
+      <div class="mock-field"><label>⚡ Quick Scores</label>
+        <div style="display:flex;gap:3px;">
+          <input style="width:32px;background:#0D0D0D;border:1px solid #2a2a2a;color:#888;padding:5px 4px;border-radius:4px;font-size:0.7rem;" value="60">
+          <input style="width:32px;background:#0D0D0D;border:1px solid #2a2a2a;color:#888;padding:5px 4px;border-radius:4px;font-size:0.7rem;" value="45">
+          <input style="width:32px;background:#0D0D0D;border:1px solid #2a2a2a;color:#888;padding:5px 4px;border-radius:4px;font-size:0.7rem;" value="41">
+          <input style="width:32px;background:#0D0D0D;border:1px solid #2a2a2a;color:#888;padding:5px 4px;border-radius:4px;font-size:0.7rem;" value="26">
+          <input style="width:32px;background:#0D0D0D;border:1px solid #2a2a2a;color:#888;padding:5px 4px;border-radius:4px;font-size:0.7rem;" value="80">
+        </div>
+      </div>
+      <div class="mock-field"><label>Input Mode</label><div class="mock-input-mode-btn">📱 NUMPAD ON</div></div>
+    </div>
+    <div class="mock-section-title">HOME PLAYERS — O'LEARY'S</div>
+    <div class="mock-player-grid">
+      <div class="mock-player-card"><div class="mock-player-name">P1</div><input class="mock-player-input" value="PW"></div>
+      <div class="mock-player-card"><div class="mock-player-name">P2</div><input class="mock-player-input" value="PU"></div>
+      <div class="mock-player-card"><div class="mock-player-name">P3</div><input class="mock-player-input" value="CT"></div>
+      <div class="mock-player-card"><div class="mock-player-name">P4</div><input class="mock-player-input" value="SC"></div>
+      <div class="mock-player-card"><div class="mock-player-name">P5</div><input class="mock-player-input" value="BB"></div>
+      <div class="mock-player-card"><div class="mock-player-name">P6</div><input class="mock-player-input" value="KK"></div>
+    </div>
+    <!-- callouts -->
+    <div class="callout-num" style="top:65px;left:4px;">1</div>
+    <div class="callout-num" style="top:65px;left:100px;">2</div>
+    <div class="callout-num" style="top:65px;left:222px;">3</div>
+    <div class="callout-num" style="top:65px;left:308px;">4</div>
+    <div class="callout-num" style="top:65px;left:382px;">5</div>
+    <div class="callout-num" style="top:65px;right:4px;">6</div>
+    <div class="callout-num" style="top:155px;left:4px;">7</div>
+  </div>
+  <div class="callouts">
+    <div class="callout-item"><div class="callout-badge">1</div><div class="callout-text"><strong>Home Team</strong><span>Your team name — shown throughout the scorer and in season records.</span></div></div>
+    <div class="callout-item"><div class="callout-badge">2</div><div class="callout-text"><strong>Away Team</strong><span>Opposition team name.</span></div></div>
+    <div class="callout-item"><div class="callout-badge">3</div><div class="callout-text"><strong>Throws First</strong><span>Set to whichever team won the bullseye toss. Can be HOME or AWAY.</span></div></div>
+    <div class="callout-item"><div class="callout-badge">4</div><div class="callout-text"><strong>Quick Scores</strong><span>Five numbers you can tap instead of typing. Change them to whatever comes up most for your team.</span></div></div>
+    <div class="callout-item"><div class="callout-badge">5</div><div class="callout-text"><strong>Input Mode</strong><span>On a tablet — tap to switch to NUMPAD ON. The floating numpad will appear for all score entry, no keyboard needed.</span></div></div>
+    <div class="callout-item"><div class="callout-badge">6</div><div class="callout-text"><strong>Player Names</strong><span>Enter all 6 home players here. Same grid for away players below. Blank fields are fine — names can be added mid-match.</span></div></div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- SECTION 3: SCORING A TEAM GAME -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="section-header">
+  <div class="section-num">3</div>
+  <div class="section-title">Scoring a Team Game</div>
+</div>
+
+<div class="screen-wrap">
+  <div class="screen-label">Team Games — Scoring Screen</div>
+  <div class="screen-mock annotated" style="position:relative;">
+    <div class="screen-chrome"><div class="screen-chrome-dot" style="background:#ff5f56;"></div><div class="screen-chrome-dot" style="background:#ffbd2e;"></div><div class="screen-chrome-dot" style="background:#27c93f;"></div></div>
+    <div class="mock-game-tabs">
+      <div class="mock-game-tab active">GAME 1</div>
+      <div class="mock-game-tab">GAME 2</div>
+      <div class="mock-game-tab">GAME 3 ✓ O'Leary's</div>
+    </div>
+    <div class="mock-scoreboard-header">
+      <div class="mock-team-label">O'Leary's</div>
+      <div>
+        <div class="mock-remaining">617 — 734<small>REMAINING</small></div>
+      </div>
+      <div class="mock-team-label right">Vicky Dock</div>
+    </div>
+    <div class="mock-quickbar">
+      <div class="mock-quickbar-label">⚡ QUICK</div>
+      <div class="mock-qs-btn">60</div>
+      <div class="mock-qs-btn">45</div>
+      <div class="mock-qs-btn">41</div>
+      <div class="mock-qs-btn">26</div>
+      <div class="mock-qs-btn">80</div>
+    </div>
+    <div class="mock-leg-table">
+      <table>
+        <thead><tr>
+          <th>Leg</th><th style="color:#D4A017;">PW</th><th style="color:#D4A017;">PU</th><th style="color:#D4A017;">CT</th><th style="color:#D4A017;">SC</th><th style="color:#D4A017;">BB</th><th style="color:#D4A017;">KK</th><th>Total</th><th>Left</th><th></th><th>Left</th><th>Total</th><th style="color:#8fa3b1;">NS</th><th style="color:#8fa3b1;">DT</th><th style="color:#8fa3b1;">DJ</th><th style="color:#8fa3b1;">LS</th><th style="color:#8fa3b1;">FP</th><th style="color:#8fa3b1;">HJ</th>
+        </tr></thead>
+        <tbody>
+          <tr><td>1</td><td class="gold">60</td><td class="gold">41</td><td class="gold">85</td><td class="gold">55</td><td class="gold">42</td><td class="gold">41</td><td class="gold">324</td><td class="gold">677</td><td style="color:#333;font-size:0.6rem;">v</td><td style="color:#8fa3b1;font-family:'Bebas Neue';font-size:0.85rem;">705</td><td style="color:#8fa3b1;font-family:'Bebas Neue';font-size:0.85rem;">296</td><td style="color:#8fa3b1;">60</td><td style="color:#8fa3b1;">26</td><td style="color:#8fa3b1;">80</td><td style="color:#8fa3b1;">45</td><td style="color:#8fa3b1;">41</td><td style="color:#8fa3b1;">44</td></tr>
+          <tr class="active" style="background:rgba(212,160,23,0.04);">
+            <td>2</td>
+            <td class="active"><input value="60"></td>
+            <td></td><td></td><td></td><td></td><td></td>
+            <td></td><td class="gold">617</td><td style="color:#333;font-size:0.6rem;">v</td><td style="color:#8fa3b1;font-family:'Bebas Neue';font-size:0.85rem;">734</td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- Floating numpad -->
+    <div class="mock-floating-numpad">
+      <div class="mock-fnp-handle"><span class="mock-fnp-title">⠿ SCORER</span><span class="mock-fnp-close">✕</span></div>
+      <div class="mock-fnp-display">60</div>
+      <div style="padding:0 5px 3px;font-size:0.55rem;color:#888;">NOW ENTERING: <span style="color:#D4A017;">PU</span></div>
+      <div class="mock-fnp-grid">
+        <div class="mock-fnp-btn">1</div><div class="mock-fnp-btn">2</div><div class="mock-fnp-btn">3</div>
+        <div class="mock-fnp-btn">4</div><div class="mock-fnp-btn">5</div><div class="mock-fnp-btn">6</div>
+        <div class="mock-fnp-btn">7</div><div class="mock-fnp-btn">8</div><div class="mock-fnp-btn">9</div>
+        <div class="mock-fnp-btn">⌫</div><div class="mock-fnp-btn" style="grid-column:span 2;">0</div>
+        <div class="mock-fnp-btn enter">ENTER ✓</div>
+      </div>
+    </div>
+    <div class="callout-num" style="top:10px;left:4px;">1</div>
+    <div class="callout-num" style="top:44px;left:4px;">2</div>
+    <div class="callout-num" style="top:85px;left:4px;">3</div>
+    <div class="callout-num" style="top:108px;right:148px;">4</div>
+    <div class="callout-num" style="top:10px;right:148px;">5</div>
+  </div>
+  <div class="callouts">
+    <div class="callout-item"><div class="callout-badge">1</div><div class="callout-text"><strong>Game Tabs</strong><span>Switch between the 3 team games. A completed game shows the winner's name with a ✓.</span></div></div>
+    <div class="callout-item"><div class="callout-badge">2</div><div class="callout-text"><strong>Score Left</strong><span>Both teams' remaining score, updated live after every throw.</span></div></div>
+    <div class="callout-item"><div class="callout-badge">3</div><div class="callout-text"><strong>Quick Score Buttons</strong><span>Tap any of these to instantly enter that score for the current player. No typing needed.</span></div></div>
+    <div class="callout-item"><div class="callout-badge">4</div><div class="callout-text"><strong>Score Input Cell</strong><span>The highlighted cell is the current player. Type a score and press Enter, or use the floating numpad (tablet) or quick score buttons.</span></div></div>
+    <div class="callout-item"><div class="callout-badge">5</div><div class="callout-text"><strong>Floating Numpad (tablet)</strong><span>Drag it anywhere using the ⠿ handle bar. Shows who is throwing and their score left. Tap ENTER ✓ to submit. Auto-advances to the next player.</span></div></div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- SECTION 4: ROUND CHECK -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="section-header">
+  <div class="section-num">4</div>
+  <div class="section-title">Round Check</div>
+</div>
+
+<p style="font-size:0.85rem;color:#444;margin-bottom:16px;line-height:1.6;">After all 12 players have thrown, this screen appears automatically. Confirm the score left with the opposing marker before continuing.</p>
+
+<div class="screen-wrap">
+  <div class="screen-label">Round Check — Desktop</div>
+  <div class="screen-mock annotated" style="position:relative;">
+    <div class="screen-chrome"><div class="screen-chrome-dot" style="background:#ff5f56;"></div><div class="screen-chrome-dot" style="background:#ffbd2e;"></div><div class="screen-chrome-dot" style="background:#27c93f;"></div></div>
+    <div class="mock-rc-overlay">
+      <div class="mock-rc-header">
+        <div class="mock-rc-title">ROUND 2 CHECK — GAME 1</div>
+        <div class="mock-rc-sub">Verify scores with the opposing marker — click EDIT to correct any score</div>
+      </div>
+      <div class="mock-rc-totals">
+        <div>
+          <div class="mock-rc-team-name">O'Leary's</div>
+          <div class="mock-rc-rem">617</div>
+          <div class="mock-rc-sub-total">Round total: <span style="color:#e8e8e8;">384</span></div>
+        </div>
+        <div class="mock-rc-mid">
+          <div style="font-size:0.55rem;text-transform:uppercase;letter-spacing:1px;color:#555;margin-bottom:3px;">Score Left</div>
+          <div class="mock-rc-badge ok">✓ MATCH</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="mock-rc-team-name" style="text-align:right;">Vicky Dock</div>
+          <div class="mock-rc-rem away">734</div>
+          <div class="mock-rc-sub-total right">Round total: <span style="color:#e8e8e8;">267</span></div>
+        </div>
+      </div>
+      <div class="mock-rc-grid">
+        <div>
+          <div class="mock-rc-section-title">O'Leary's</div>
+          <div class="mock-rc-row"><div class="mock-rc-player">PW</div><div class="mock-rc-score">60</div><button class="mock-rc-edit">EDIT</button></div>
+          <div class="mock-rc-row"><div class="mock-rc-player">PU</div><div class="mock-rc-score">85</div><button class="mock-rc-edit">EDIT</button></div>
+          <div class="mock-rc-row"><div class="mock-rc-player">CT</div><div class="mock-rc-score">41</div><button class="mock-rc-edit">EDIT</button></div>
+          <div class="mock-rc-row"><div class="mock-rc-player">SC</div><div class="mock-rc-score">60</div><button class="mock-rc-edit">EDIT</button></div>
+          <div class="mock-rc-row"><div class="mock-rc-player">BB</div><div class="mock-rc-score">80</div><button class="mock-rc-edit">EDIT</button></div>
+          <div class="mock-rc-row"><div class="mock-rc-player">KK</div><div class="mock-rc-score">58</div><button class="mock-rc-edit">EDIT</button></div>
+        </div>
+        <div>
+          <div class="mock-rc-section-title away">Vicky Dock</div>
+          <div class="mock-rc-row"><div class="mock-rc-player">NS</div><div class="mock-rc-score away">45</div><button class="mock-rc-edit">EDIT</button></div>
+          <div class="mock-rc-row"><div class="mock-rc-player">DT</div><div class="mock-rc-score away">41</div><button class="mock-rc-edit">EDIT</button></div>
+          <div class="mock-rc-row"><div class="mock-rc-player">DJ</div><div class="mock-rc-score away">60</div><button class="mock-rc-edit">EDIT</button></div>
+          <div class="mock-rc-row"><div class="mock-rc-player">LS</div><div class="mock-rc-score away">26</div><button class="mock-rc-edit">EDIT</button></div>
+          <div class="mock-rc-row"><div class="mock-rc-player">FP</div><div class="mock-rc-score away">60</div><button class="mock-rc-edit">EDIT</button></div>
+          <div class="mock-rc-row"><div class="mock-rc-player">HJ</div><div class="mock-rc-score away">35</div><button class="mock-rc-edit">EDIT</button></div>
+        </div>
+      </div>
+      <div class="mock-rc-footer">
+        <button class="mock-btn-sec">CANCEL</button>
+        <button class="mock-btn-pri">CONFIRM ROUND ✓</button>
+      </div>
+    </div>
+    <div class="callout-num" style="top:36px;left:4px;">1</div>
+    <div class="callout-num" style="top:70px;left:180px;">2</div>
+    <div class="callout-num" style="top:115px;left:4px;">3</div>
+    <div class="callout-num" style="bottom:12px;right:80px;">4</div>
+  </div>
+  <div class="callouts">
+    <div class="callout-item"><div class="callout-badge">1</div><div class="callout-text"><strong>Score Left — the big number</strong><span>This is what you call out to the opposing marker. Both sides should match. If they don't, DIFFER shows in red.</span></div></div>
+    <div class="callout-item"><div class="callout-badge">2</div><div class="callout-text"><strong>✓ MATCH / DIFFER</strong><span>Green MATCH means both markers agree on the score left. Red DIFFER means something doesn't add up — find the error before confirming.</span></div></div>
+    <div class="callout-item"><div class="callout-badge">3</div><div class="callout-text"><strong>EDIT button</strong><span>Tap EDIT next to any score that is wrong. Type the correct score and tap SAVE ✓. The totals update instantly.</span></div></div>
+    <div class="callout-item"><div class="callout-badge">4</div><div class="callout-text"><strong>CONFIRM ROUND ✓</strong><span>Only tap this once everything matches. The match continues to the next round.</span></div></div>
+  </div>
+</div>
+
+<div class="note">If you tap CANCEL the round check closes without saving any edits. The scores on the board are unchanged.</div>
+
+<hr class="divider">
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- SECTION 5: SINGLES -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="section-header">
+  <div class="section-num">5</div>
+  <div class="section-title">Scoring Singles</div>
+</div>
+
+<div class="screen-wrap">
+  <div class="screen-label">Singles Tab — Desktop</div>
+  <div class="screen-mock annotated" style="position:relative;">
+    <div class="screen-chrome"><div class="screen-chrome-dot" style="background:#ff5f56;"></div><div class="screen-chrome-dot" style="background:#ffbd2e;"></div><div class="screen-chrome-dot" style="background:#27c93f;"></div></div>
+    <div class="mock-tabs">
+      <div class="mock-tab">⚡ TEAM GAMES</div>
+      <div class="mock-tab active">🎯 SINGLES</div>
+      <div class="mock-tab">📊 SUMMARY</div>
+      <div class="mock-tab">🏆 SEASON</div>
+    </div>
+    <div class="mock-singles-setup">
+      <div class="mock-field"><label>Starting Score</label>
+        <select style="background:#0D0D0D;border:1px solid #2a2a2a;color:#e8e8e8;padding:6px 8px;border-radius:4px;font-size:0.75rem;"><option>501</option></select>
+      </div>
+      <div class="mock-field"><label>Player 1 Name</label><input value="Neil" style="background:#0D0D0D;border:1px solid #2a2a2a;color:#e8e8e8;padding:6px 8px;border-radius:4px;font-size:0.75rem;width:90px;"></div>
+      <div style="padding-bottom:6px;font-family:'Bebas Neue';font-size:1rem;color:#8B0000;">V</div>
+      <div class="mock-field"><label>Player 2 Name</label><input value="Dan" style="background:#0D0D0D;border:1px solid #2a2a2a;color:#e8e8e8;padding:6px 8px;border-radius:4px;font-size:0.75rem;width:90px;"></div>
+      <div class="mock-field"><label>🎯 Throws First</label>
+        <select style="background:#0D0D0D;border:1px solid #D4A017;color:#D4A017;padding:6px 8px;border-radius:4px;font-family:'Bebas Neue';font-size:0.85rem;letter-spacing:1px;"><option>NEIL</option><option>DAN</option></select>
+      </div>
+    </div>
+    <div style="display:flex;gap:5px;padding:8px 16px 0;">
+      <div style="background:#1e1e1e;border:1px solid #2a2a2a;color:#555;font-family:'Bebas Neue';font-size:0.75rem;letter-spacing:1px;padding:5px 12px;border-radius:4px;">SINGLES 1</div>
+      <div style="background:#8B0000;border:1px solid #8B0000;color:#fff;font-family:'Bebas Neue';font-size:0.75rem;letter-spacing:1px;padding:5px 12px;border-radius:4px;">SINGLES 2</div>
+      <div style="background:#1e1e1e;border:1px solid #27ae60;color:#27ae60;font-family:'Bebas Neue';font-size:0.75rem;letter-spacing:1px;padding:5px 12px;border-radius:4px;">SINGLES 3 ✓</div>
+      <div style="background:#1e1e1e;border:1px solid #2a2a2a;color:#555;font-family:'Bebas Neue';font-size:0.75rem;letter-spacing:1px;padding:5px 12px;border-radius:4px;">SINGLES 4</div>
+      <div style="background:#1e1e1e;border:1px solid #2a2a2a;color:#555;font-family:'Bebas Neue';font-size:0.75rem;letter-spacing:1px;padding:5px 12px;border-radius:4px;">SINGLES 5</div>
+      <div style="background:#1e1e1e;border:1px solid #2a2a2a;color:#555;font-family:'Bebas Neue';font-size:0.75rem;letter-spacing:1px;padding:5px 12px;border-radius:4px;">SINGLES 6</div>
+    </div>
+    <div class="mock-quickbar" style="margin-top:6px;">
+      <div class="mock-quickbar-label">⚡ QUICK</div>
+      <div class="mock-qs-btn">60</div><div class="mock-qs-btn">45</div>
+      <div class="mock-qs-btn">41</div><div class="mock-qs-btn">26</div>
+      <div class="mock-qs-btn">80</div>
+    </div>
+    <div class="mock-singles-header">
+      <div class="mock-singles-player">
+        <div class="mock-singles-name">Neil</div>
+        <div class="mock-singles-rem">358</div>
+        <div style="font-size:0.55rem;color:#D4A017;font-family:'Bebas Neue';letter-spacing:1px;">🎯 THROWS FIRST</div>
+      </div>
+      <div class="mock-singles-vs">V</div>
+      <div class="mock-singles-player right">
+        <div class="mock-singles-name">Dan</div>
+        <div class="mock-singles-rem away">441</div>
+      </div>
+    </div>
+    <div style="padding:6px 16px 10px;">
+      <table style="width:100%;border-collapse:collapse;font-size:0.65rem;">
+        <thead><tr>
+          <th style="background:#1e1e1e;color:#555;font-size:0.55rem;text-transform:uppercase;letter-spacing:1px;padding:5px 8px;border-bottom:1px solid #2a2a2a;text-align:center;">Leg</th>
+          <th style="background:#1e1e1e;color:#D4A017;font-size:0.55rem;text-transform:uppercase;letter-spacing:1px;padding:5px 8px;border-bottom:1px solid #2a2a2a;text-align:center;">Neil</th>
+          <th style="background:#1e1e1e;color:#555;font-size:0.55rem;text-transform:uppercase;letter-spacing:1px;padding:5px 8px;border-bottom:1px solid #2a2a2a;text-align:center;">Left</th>
+          <th style="background:#1e1e1e;padding:5px 4px;border-bottom:1px solid #2a2a2a;"></th>
+          <th style="background:#1e1e1e;color:#555;font-size:0.55rem;text-transform:uppercase;letter-spacing:1px;padding:5px 8px;border-bottom:1px solid #2a2a2a;text-align:center;">Left</th>
+          <th style="background:#1e1e1e;color:#8fa3b1;font-size:0.55rem;text-transform:uppercase;letter-spacing:1px;padding:5px 8px;border-bottom:1px solid #2a2a2a;text-align:center;">Dan</th>
+        </tr></thead>
+        <tbody>
+          <tr><td style="color:#555;text-align:center;">1</td><td style="color:#D4A017;font-family:'Bebas Neue';font-size:0.85rem;text-align:center;">85</td><td style="color:#888;font-family:'Bebas Neue';font-size:0.85rem;text-align:center;">416</td><td style="color:#333;text-align:center;font-size:0.6rem;">v</td><td style="color:#888;font-family:'Bebas Neue';font-size:0.85rem;text-align:center;">441</td><td style="color:#8fa3b1;font-family:'Bebas Neue';font-size:0.85rem;text-align:center;">60</td></tr>
+          <tr><td style="color:#555;text-align:center;">2</td><td style="color:#D4A017;font-family:'Bebas Neue';font-size:0.85rem;text-align:center;">58</td><td style="color:#888;font-family:'Bebas Neue';font-size:0.85rem;text-align:center;">358</td><td style="color:#333;text-align:center;font-size:0.6rem;">v</td><td style="color:#888;font-family:'Bebas Neue';font-size:0.85rem;text-align:center;">441</td><td style="text-align:center;"><input style="background:#0D0D0D;border:1px solid #2a2a2a;color:#8fa3b1;font-family:'Bebas Neue';font-size:0.8rem;width:36px;padding:2px 4px;border-radius:2px;text-align:center;" placeholder="—"></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout-num" style="top:46px;left:4px;">1</div>
+    <div class="callout-num" style="top:46px;left:260px;">2</div>
+    <div class="callout-num" style="top:90px;left:4px;">3</div>
+    <div class="callout-num" style="top:113px;left:4px;">4</div>
+    <div class="callout-num" style="top:148px;left:4px;">5</div>
+  </div>
+  <div class="callouts">
+    <div class="callout-item"><div class="callout-badge">1</div><div class="callout-text"><strong>Player Names &amp; Throws First</strong><span>Type names as each draw comes out of the hat. Use the Throws First dropdown to set who goes first — it shows the player's actual name.</span></div></div>
+    <div class="callout-item"><div class="callout-badge">2</div><div class="callout-text"><strong>Singles Game Tabs (S1–S6)</strong><span>Switch between singles games. Active game is red. Green with ✓ means that game is complete.</span></div></div>
+    <div class="callout-item"><div class="callout-badge">3</div><div class="callout-text"><strong>Quick Score Buttons</strong><span>Same five scores as team games — tap to enter instantly for whichever player is next.</span></div></div>
+    <div class="callout-item"><div class="callout-badge">4</div><div class="callout-text"><strong>Score Left</strong><span>Both players' remaining scores. Turns red when below 100. Turns green when a player wins (checkout score shown with ✓).</span></div></div>
+    <div class="callout-item"><div class="callout-badge">5</div><div class="callout-text"><strong>Leg Table</strong><span>Every leg with each player's score and running remaining. The input box highlights whose turn it is.</span></div></div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- SECTION 6: MOBILE SCORER -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="section-header">
+  <div class="section-num">6</div>
+  <div class="section-title">Mobile Scorer — at the Oche</div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+  <div>
+    <div class="screen-label">Scoring Screen</div>
+    <div class="mobile-frame annotated" style="position:relative;">
+      <div class="mobile-status"><div class="mobile-status-dot"></div></div>
+      <div class="mock-header" style="padding:8px 12px;">
+        <div style="font-size:0.8rem;color:#888;">← </div>
+        <div style="font-family:'Bebas Neue';font-size:0.9rem;letter-spacing:1px;color:#fff;flex:1;margin-left:4px;">TEAM GAME 1</div>
+        <div style="font-family:'Bebas Neue';font-size:1rem;color:#D4A017;">2 — 1</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;padding:6px 10px;background:#0D0D0D;border-bottom:1px solid #222;">
+        <div><div style="font-size:0.5rem;color:#555;margin-bottom:1px;">O'LEARY'S</div><div style="font-family:'Bebas Neue';font-size:1.6rem;color:#D4A017;line-height:1;">617</div></div>
+        <div style="font-family:'Bebas Neue';font-size:0.8rem;color:#333;align-self:center;">v</div>
+        <div style="text-align:right;"><div style="font-size:0.5rem;color:#555;margin-bottom:1px;">VICKY DOCK</div><div style="font-family:'Bebas Neue';font-size:1.6rem;color:#8fa3b1;line-height:1;">734</div></div>
+      </div>
+      <div class="mock-pips"><div class="mock-pip-label">RND 2</div><div class="mock-pip home"></div><div class="mock-pip away"></div><div class="mock-pip home"></div><div class="mock-pip away"></div><div class="mock-pip home"></div><div class="mock-pip away"></div><div class="mock-pip current"></div><div class="mock-pip"></div><div class="mock-pip"></div><div class="mock-pip"></div><div class="mock-pip"></div><div class="mock-pip"></div></div>
+      <div style="background:#141414;border:1px solid #2a2a2a;border-radius:8px;margin:5px 10px;padding:7px 10px;display:flex;align-items:center;gap:8px;">
+        <div><div style="font-size:0.5rem;color:#555;text-transform:uppercase;letter-spacing:1px;">NOW THROWING</div><div style="font-family:'Bebas Neue';font-size:1.1rem;color:#D4A017;line-height:1;">SC</div></div>
+        <div style="margin-left:auto;font-family:'Bebas Neue';font-size:0.75rem;color:#555;">LEFT <span style="color:#D4A017;">617</span></div>
+      </div>
+      <div style="padding:3px 10px 4px;"><div style="font-size:0.5rem;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">RECENT</div>
+        <div style="display:flex;gap:4px;overflow:hidden;">
+          <div style="background:#1a0800;border:1px solid rgba(212,160,23,0.3);border-radius:4px;padding:2px 6px;font-family:'Bebas Neue';font-size:0.75rem;color:#D4A017;">PW 60</div>
+          <div style="background:#0a0c12;border:1px solid rgba(143,163,177,0.3);border-radius:4px;padding:2px 6px;font-family:'Bebas Neue';font-size:0.75rem;color:#8fa3b1;">NS 45</div>
+          <div style="background:#1a0800;border:1px solid rgba(212,160,23,0.3);border-radius:4px;padding:2px 6px;font-family:'Bebas Neue';font-size:0.75rem;color:#D4A017;">PU 41</div>
+          <div style="background:#0a0c12;border:1px solid rgba(143,163,177,0.3);border-radius:4px;padding:2px 6px;font-family:'Bebas Neue';font-size:0.75rem;color:#8fa3b1;">DT 60</div>
+        </div>
+      </div>
+      <div class="mock-np-display">—</div>
+      <div class="mock-numpad">
+        <div class="mock-np-btn">1</div><div class="mock-np-btn">2</div><div class="mock-np-btn">3</div>
+        <div class="mock-np-btn">4</div><div class="mock-np-btn">5</div><div class="mock-np-btn">6</div>
+        <div class="mock-np-btn">7</div><div class="mock-np-btn">8</div><div class="mock-np-btn">9</div>
+        <div class="mock-np-btn">⌫</div><div class="mock-np-btn zero">0</div>
+        <div class="mock-np-btn enter">ENTER ✓</div>
+      </div>
+      <div class="mock-undo-bar">
+        <div class="mock-undo-btn">↩ UNDO</div>
+        <div class="mock-undo-btn">💾 EXPORT</div>
+        <div class="mock-undo-btn">📂 IMPORT</div>
+      </div>
+      <!-- callouts -->
+      <div class="callout-num" style="top:30px;right:4px;">1</div>
+      <div class="callout-num" style="top:58px;left:4px;">2</div>
+      <div class="callout-num" style="top:90px;left:4px;">3</div>
+      <div class="callout-num" style="top:112px;right:4px;">4</div>
+      <div class="callout-num" style="top:138px;left:4px;">5</div>
+      <div class="callout-num" style="bottom:10px;left:4px;">6</div>
+    </div>
+  </div>
+  <div class="callouts" style="margin-top:32px;">
+    <div class="callout-item"><div class="callout-badge">1</div><div class="callout-text"><strong>Match Score</strong><span>Live score in the header — updates after every throw.</span></div></div>
+    <div class="callout-item"><div class="callout-badge">2</div><div class="callout-text"><strong>Score Left</strong><span>Both teams' remaining at all times.</span></div></div>
+    <div class="callout-item"><div class="callout-badge">3</div><div class="callout-text"><strong>Round Progress Pips</strong><span>Gold = home thrown, Steel = away thrown, pulsing = who's next. 12 pips per round.</span></div></div>
+    <div class="callout-item"><div class="callout-badge">4</div><div class="callout-text"><strong>Now Throwing</strong><span>Large clear display of the current player. Never any doubt whose turn it is.</span></div></div>
+    <div class="callout-item"><div class="callout-badge">5</div><div class="callout-text"><strong>Recent Throws</strong><span>Last 8 scores scrolling left. Gold = home, Steel = away, Red = 100+.</span></div></div>
+    <div class="callout-item"><div class="callout-badge">6</div><div class="callout-text"><strong>UNDO</strong><span>Tap immediately if a wrong score was entered. Removes the last throw.</span></div></div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- SECTION 7: SEASON TAB -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="section-header">
+  <div class="section-num">7</div>
+  <div class="section-title">Season Record</div>
+</div>
+
+<div class="screen-wrap">
+  <div class="screen-label">Season Tab — Desktop</div>
+  <div class="screen-mock annotated" style="position:relative;">
+    <div class="screen-chrome"><div class="screen-chrome-dot" style="background:#ff5f56;"></div><div class="screen-chrome-dot" style="background:#ffbd2e;"></div><div class="screen-chrome-dot" style="background:#27c93f;"></div></div>
+    <div class="mock-tabs">
+      <div class="mock-tab">⚡ TEAM GAMES</div>
+      <div class="mock-tab">🎯 SINGLES</div>
+      <div class="mock-tab">📊 SUMMARY</div>
+      <div class="mock-tab active">🏆 SEASON</div>
+    </div>
+    <div style="padding:10px 16px 6px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-family:'Bebas Neue';font-size:1rem;letter-spacing:2px;color:#D4A017;">SEASON RECORD</div>
+      <div style="display:flex;gap:6px;">
+        <div style="background:#8B0000;border:none;color:#fff;font-family:'Bebas Neue';font-size:0.65rem;letter-spacing:1px;padding:6px 10px;border-radius:4px;">+ ADD MATCH TO SEASON</div>
+        <div class="mock-season-btn-sec">💾 SAVE TO FILE</div>
+        <div class="mock-season-btn-sec">📂 LOAD FROM FILE</div>
+      </div>
+    </div>
+    <div class="mock-season-card">
+      <div class="mock-season-card-title">MATCH HISTORY</div>
+      <table class="mock-season-table">
+        <thead><tr><th>Date</th><th>Team</th><th>Score</th><th>Team Pts</th><th>Singles Pts</th><th>Hi Finish</th><th>Result</th></tr></thead>
+        <tbody>
+          <tr><td>01/07/26</td><td>O'Leary's</td><td class="gold">6 — 3</td><td>2—1</td><td>4—2</td><td style="color:#27ae60;font-family:'Bebas Neue';font-size:0.85rem;">80</td><td class="result">WIN</td></tr>
+          <tr><td>17/06/26</td><td>O'Leary's</td><td class="gold">5 — 4</td><td>2—1</td><td>3—3</td><td style="color:#27ae60;font-family:'Bebas Neue';font-size:0.85rem;">60</td><td class="result">WIN</td></tr>
+          <tr><td>03/06/26</td><td>O'Leary's</td><td style="color:#c0392b;font-family:'Bebas Neue';font-size:0.85rem;">3 — 6</td><td>1—2</td><td>2—4</td><td style="color:#27ae60;font-family:'Bebas Neue';font-size:0.85rem;">41</td><td style="color:#c0392b;font-weight:700;font-size:0.75rem;">LOSS</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="mock-season-card" style="margin-top:6px;">
+      <div class="mock-season-card-title">PLAYER SEASON STATS — O'LEARY'S</div>
+      <table class="mock-season-table">
+        <thead><tr><th>Player</th><th>M</th><th>Team Avg</th><th>Singles Avg</th><th>Best</th><th>100+</th><th>120+</th><th>Hi Finish</th></tr></thead>
+        <tbody>
+          <tr><td style="font-weight:600;color:#e8e8e8;">PW</td><td>3</td><td class="gold">58.4</td><td class="gold">61.2</td><td><span style="background:#B8860B;color:#000;font-size:0.6rem;padding:1px 4px;border-radius:2px;font-weight:700;">80</span></td><td style="color:#c0392b;">4</td><td style="color:#D4A017;">1</td><td style="color:#27ae60;font-family:'Bebas Neue';font-size:0.85rem;">80</td></tr>
+          <tr><td style="font-weight:600;color:#e8e8e8;">PU</td><td>3</td><td class="gold">52.1</td><td class="gold">55.8</td><td>—</td><td style="color:#c0392b;">2</td><td style="color:#D4A017;">—</td><td style="color:#27ae60;font-family:'Bebas Neue';font-size:0.85rem;">60</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout-num" style="top:36px;left:4px;">1</div>
+    <div class="callout-num" style="top:36px;left:168px;">2</div>
+    <div class="callout-num" style="top:36px;left:242px;">3</div>
+    <div class="callout-num" style="top:80px;right:4px;">4</div>
+    <div class="callout-num" style="bottom:30px;right:4px;">5</div>
+  </div>
+  <div class="callouts">
+    <div class="callout-item"><div class="callout-badge">1</div><div class="callout-text"><strong>+ ADD MATCH TO SEASON</strong><span>Tap this after every completed match to save the result, player averages, singles record and highest finish.</span></div></div>
+    <div class="callout-item"><div class="callout-badge">2</div><div class="callout-text"><strong>💾 SAVE TO FILE</strong><span>Download the season data as a file. Do this after every match night — the scorer does not save automatically.</span></div></div>
+    <div class="callout-item"><div class="callout-badge">3</div><div class="callout-text"><strong>📂 LOAD FROM FILE</strong><span>Reload a previously saved season at the start of the next match night.</span></div></div>
+    <div class="callout-item"><div class="callout-badge">4</div><div class="callout-text"><strong>Match History</strong><span>Every saved match. The ✕ button on each row removes it if entered by mistake.</span></div></div>
+    <div class="callout-item"><div class="callout-badge">5</div><div class="callout-text"><strong>Player Season Stats</strong><span>Cumulative averages split by team games and singles, plus 100s, 120s and best checkout across the whole season.</span></div></div>
+  </div>
+</div>
+
+<div class="note">Season data is stored in your browser but can be lost if you clear browser history. Always use 💾 SAVE TO FILE after adding a match.</div>
+
+<hr class="divider">
+
+<div style="text-align:center;padding:30px 0 10px;">
+  <div style="font-size:2rem;margin-bottom:8px;">🎯</div>
+  <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:3px;color:var(--accent);">GOOD LUCK AND GOOD DARTS</div>
+  <div style="font-size:0.8rem;color:#888;margin-top:6px;">NeilTDarts.github.io/Doubles_scorer</div>
+</div>
+
+</div><!-- end .page -->
+</body>
+</html>
